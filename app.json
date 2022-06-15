@@ -1,0 +1,20 @@
+{
+    "id": "4babd3fe-bc63-4de5-b5b4-e530ca1aa960",
+    "version": "0.0.1",
+    "requiredApiVersion": "^1.32.0",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Irfan Asif",
+        "homepage": "https://irfanasif.me",
+        "support": "https://github.com/demonicirfan"
+    },
+    "name": "Figma",
+    "nameSlug": "figma",
+    "classFile": "FigmaApp.ts",
+    "description": "Integrates Figma into Rocket.Chat. Users and Teams are directly notified in the chat about comments and updates in the Figma project.",
+    "categories": [
+        "Design Tool",
+        "Project Management"
+    ],
+    "implements": []
+}
