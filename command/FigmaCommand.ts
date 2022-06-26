@@ -11,7 +11,19 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { createSectionBlock, IButton } from "../src/lib/block";
-import { sendDM } from "../src/lib/messages";
+import {
+    sendDMToUser,
+    sendMessage,
+    sendNotificationToUser,
+} from "../src/lib/messages";
+import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
+import { getAccessTokenForUser } from "../src/storage/users";
+import {
+    BlockElementType,
+    TextObjectType,
+} from "@rocket.chat/apps-engine/definition/uikit";
+import { figmaSubscribeCommand } from "./Subscribe";
+import { figmaConnectCommand } from "./Connect";
 
 export class FigmaCommand implements ISlashCommand {
     public command = "figma";
@@ -29,10 +41,9 @@ export class FigmaCommand implements ISlashCommand {
         persistence: IPersistence
     ): Promise<void> {
         const [command] = context.getArguments();
-
         switch (command) {
             case "connect":
-                await this.figmaConnectCommand(
+                await figmaConnectCommand(
                     this.app,
                     read,
                     modify,
@@ -48,8 +59,20 @@ export class FigmaCommand implements ISlashCommand {
                     persistence
                 );
                 break;
+            case "subscribe":
+                await figmaSubscribeCommand(
+                    context,
+                    read,
+                    modify,
+                    http,
+                    persistence,
+                    context.getRoom(),
+                    context.getSender()
+                );
+                break;
             default:
                 await this.figmaConfuseCommand(
+                    context.getRoom(),
                     read,
                     modify,
                     context.getSender(),
@@ -74,9 +97,10 @@ export class FigmaCommand implements ISlashCommand {
         \xa0\xa0• \` /figma off \` to turn off notifications.
         \xa0\xa0• \` /figma on \` to turn notifications back on.
          `;
-        await sendDM(read, modify, user, message, persistence);
+        await sendDMToUser(read, modify, user, message, persistence);
     }
     public async figmaConfuseCommand(
+        room: IRoom,
         read: IRead,
         modify: IModify,
         user: IUser,
@@ -85,34 +109,6 @@ export class FigmaCommand implements ISlashCommand {
         const message = `Hmmm. I didn't really understand that last message.
          Try \`/figma help\` to see the commands available
          `;
-        await sendDM(read, modify, user, message, persistence);
-    }
-    public async figmaConnectCommand(
-        app: FigmaApp,
-        read: IRead,
-        modify: IModify,
-        user: IUser,
-        persistence: IPersistence
-    ) {
-        const url = await app
-            .getOauth2ClientInstance()
-            .getUserAuthorizationUrl(user);
-
-        const button: IButton = {
-            text: "Connect Your Account",
-            url: url.toString(),
-        };
-
-        const message = `
-        Connect your Figma account to start getting notifications.
-        With Figma App, you can reply to file comments directly in a rocket chat channel. You will get notified when:
-            \xa0\xa0 • A new comment is added to a file you are collaborating on.
-            \xa0\xa0 • Someone replies to a comment you made.
-            \xa0\xa0 • You are tagged in a file.
-            \xa0\xa0 • You are invited to a file.
-            \xa0\xa0 • A file you are collaborating on is updated.`;
-
-        const block = await createSectionBlock(modify, message, button);
-        await sendDM(read, modify, user, "", persistence, block);
+        await sendNotificationToUser(read, modify, user, room, message);
     }
 }

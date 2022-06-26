@@ -77,11 +77,10 @@ export async function shouldSendMessage(
     );
     const notificationStatus =
         await notificationsController.getNotificationsStatus();
-
     return notificationStatus ? notificationStatus.status : true;
 }
 
-export async function sendNotification(
+export async function sendNotificationToUser(
     read: IRead,
     modify: IModify,
     user: IUser,
@@ -105,7 +104,7 @@ export async function sendNotification(
     return read.getNotifier().notifyUser(user, msg.getMessage());
 }
 
-export async function sendDM(
+export async function sendDMToUser(
     read: IRead,
     modify: IModify,
     user: IUser,
