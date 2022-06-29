@@ -32,7 +32,8 @@ import {
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { createSubscription } from "./src/lib/createSubscriptionMessage";
-import { IState } from "./src/lib/interface";
+import { IState } from "./src/definition";
+import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 
 export class FigmaApp extends App {
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {

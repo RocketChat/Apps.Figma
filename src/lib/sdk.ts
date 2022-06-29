@@ -4,6 +4,7 @@ const crypto = require("crypto");
 
 const BaseFileHost = "https://www.figma.com/file/";
 const BaseTeamHost = "https://www.figma.com/files/team/";
+const BaseProjectHost = "https://www.figma.com/files/project/";
 const BaseApiHost = "https://www.figma.com/api";
 
 const passcode = crypto.randomBytes(48).toString("hex");
@@ -46,7 +47,7 @@ export class FigmaSDK {
 }
 //file url example - https://www.figma.com/file/b0l0lp73g04EgbqDeNiHh4/file-2
 export function getFileName(fileURL: string): string {
-    if (!fileURL.startsWith(BaseTeamHost)) {
+    if (!fileURL.startsWith(BaseFileHost)) {
         return "";
     }
 
@@ -55,12 +56,12 @@ export function getFileName(fileURL: string): string {
     return fileName;
 }
 
+// file url - https://www.figma.com/file/f6dNpg1iG3KXgy4BpPaKMK/Twitter-Content?node-id=0%3A1
 export function getFileID(fileURL: string): string {
-    if (!fileURL.startsWith(BaseTeamHost)) {
+    if (!fileURL.startsWith(BaseFileHost)) {
         return "";
     }
-
-    const apiUrl = fileURL.substring(BaseTeamHost.length);
+    const apiUrl = fileURL.substring(BaseFileHost.length);
     const fileID = apiUrl.split("/")[0];
     return fileID;
 }
@@ -73,13 +74,12 @@ export function getTeamID(teamURL: string): string {
     const teamID = id;
     return teamID;
 }
-
-export function getTeamName(teamURL: string): string {
-    if (!teamURL.startsWith(BaseTeamHost)) {
+// project url - https://www.figma.com/files/project/53807385/project1?fuid=983416835186317142
+export function getProjectID(teamURL: string): string {
+    if (!teamURL.startsWith(BaseProjectHost)) {
         return "";
     }
-
-    const apiUrl = teamURL.substring(BaseTeamHost.length);
-    const teamID = apiUrl.split("/")[0];
-    return teamID;
+    const id = teamURL.substring(BaseProjectHost.length).split("/")[0];
+    const projectID = id;
+    return projectID;
 }

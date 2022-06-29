@@ -6,13 +6,18 @@ import {
     IPersistence,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
-import { sendDMToUser, sendNotificationToUser } from "../src/lib/messages";
+import { sendDMToUser, sendNotificationToUsers } from "../src/lib/messages";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { getAccessTokenForUser } from "../src/storage/users";
 import {
     BlockElementType,
     TextObjectType,
 } from "@rocket.chat/apps-engine/definition/uikit";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
+import { uuid } from "../src/lib/uuid";
 
 export async function figmaSubscribeCommand(
     context: SlashCommandContext,
@@ -21,13 +26,14 @@ export async function figmaSubscribeCommand(
     http: IHttp,
     persist: IPersistence,
     room: IRoom,
-    sender: IUser
+    sender: IUser,
+    id?: string
 ) {
+    const viewId = id || uuid();
     const accessToken = await getAccessTokenForUser(read, sender);
-
     if (!accessToken?.token) {
         const message = `Your have not connected your account yet. Use \`/figma connect\` to connect your account.`;
-        await sendNotificationToUser(read, modify, sender, room, message);
+        await sendNotificationToUsers(read, modify, sender, room, message);
         return;
     }
 
@@ -38,6 +44,13 @@ export async function figmaSubscribeCommand(
     }
 
     const triggerId = context.getTriggerId()!;
+
+    const association = new RocketChatAssociationRecord(
+        RocketChatAssociationModel.MISC,
+        sender.id
+    );
+    await persist.createWithAssociation(room, association);
+
     const block = modify.getCreator().getBlockBuilder();
 
     block.addSectionBlock({
@@ -66,6 +79,10 @@ export async function figmaSubscribeCommand(
                     {
                         text: block.newPlainTextObject("File"),
                         value: "file",
+                    },
+                    {
+                        text: block.newPlainTextObject("Team"),
+                        value: "team",
                     },
                     {
                         text: block.newPlainTextObject("Project"),
