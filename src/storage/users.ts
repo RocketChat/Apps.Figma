@@ -63,7 +63,6 @@ function isUserPresent(users: IUser[], targetUser: IUser): boolean {
 export async function getAccessTokenForUser(
     read: IRead,
     user: IUser,
-    config: IOAuth2ClientOptions
 ): Promise<IAuthData | undefined> {
     const associations = [
         new RocketChatAssociationRecord(
@@ -72,7 +71,7 @@ export async function getAccessTokenForUser(
         ),
         new RocketChatAssociationRecord(
             RocketChatAssociationModel.MISC,
-            `${config.alias}-oauth-connection`
+            `figma-oauth-connection`
         ),
     ];
     const [result] = (await read
