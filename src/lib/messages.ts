@@ -42,10 +42,12 @@ export async function getDirectRoom(
     }
 }
 
+
 /**
  *
  * sends a message in the room/channel which is visible to everyone
  */
+
 export async function sendMessage(
     modify: IModify,
     room: IRoom,
@@ -68,6 +70,7 @@ export async function sendMessage(
 
     return await modify.getCreator().finish(msg);
 }
+
 export async function appUserSendMessage(
     read: IRead,
     modify: IModify,
@@ -90,6 +93,7 @@ export async function appUserSendMessage(
     return await modify.getCreator().finish(msg);
 }
 
+
 export async function shouldSendMessage(
     read: IRead,
     persistence: IPersistence,
@@ -102,6 +106,7 @@ export async function shouldSendMessage(
     );
     const notificationStatus =
         await notificationsController.getNotificationsStatus();
+
     return notificationStatus ? notificationStatus.status : true;
 }
 
@@ -110,6 +115,7 @@ export async function shouldSendMessage(
  * Sends notification to the user which is only visible to user. (  Only you can see this message )
  */
 export async function sendNotificationToUsers(
+
     read: IRead,
     modify: IModify,
     user: IUser,
@@ -129,6 +135,7 @@ export async function sendNotificationToUsers(
     if (blocks) {
         msg.setBlocks(blocks);
     }
+
     console.log("sending notification");
     return read.getNotifier().notifyUser(user, msg.getMessage());
 }
@@ -138,6 +145,7 @@ export async function sendNotificationToUsers(
  * User will receive a direct message by figma.bot.
  */
 export async function sendDMToUser(
+
     read: IRead,
     modify: IModify,
     user: IUser,

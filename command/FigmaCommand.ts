@@ -11,6 +11,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { createSectionBlock, IButton } from "../src/lib/block";
+
 import {
     sendDMToUser,
     sendMessage,
@@ -24,6 +25,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { figmaSubscribeCommand } from "./Subscribe";
 import { figmaConnectCommand } from "./Connect";
+
 
 export class FigmaCommand implements ISlashCommand {
     public command = "figma";
@@ -41,6 +43,7 @@ export class FigmaCommand implements ISlashCommand {
         persistence: IPersistence
     ): Promise<void> {
         const [command] = context.getArguments();
+
         switch (command) {
             case "connect":
                 await figmaConnectCommand(
@@ -59,6 +62,7 @@ export class FigmaCommand implements ISlashCommand {
                     persistence
                 );
                 break;
+
             case "subscribe":
                 await figmaSubscribeCommand(
                     context,
@@ -101,6 +105,7 @@ export class FigmaCommand implements ISlashCommand {
     }
     public async figmaConfuseCommand(
         room: IRoom,
+
         read: IRead,
         modify: IModify,
         user: IUser,
@@ -110,5 +115,6 @@ export class FigmaCommand implements ISlashCommand {
          Try \`/figma help\` to see the commands available
          `;
         await sendNotificationToUsers(read, modify, user, room, message);
+
     }
 }

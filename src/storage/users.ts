@@ -71,7 +71,9 @@ export async function getAccessTokenForUser(
         ),
         new RocketChatAssociationRecord(
             RocketChatAssociationModel.MISC,
+
             `figma-oauth-connection`
+
         ),
     ];
     const [result] = (await read

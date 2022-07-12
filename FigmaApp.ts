@@ -10,16 +10,19 @@ import {
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
+
 import {
     IAppInfo,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
+
 import {
     IAuthData,
     IOAuth2Client,
     IOAuth2ClientOptions,
 } from "@rocket.chat/apps-engine/definition/oauth2/IOAuth2";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+
 import { sendDMToUser } from "./src/lib/messages";
 import {
     create as registerAuthorizedUser,
@@ -48,6 +51,7 @@ export class FigmaApp extends App {
     public user: IUser;
     public botName: string;
 
+
     public oauth2ClientInstance: IOAuth2Client;
     public oauth2Options: IOAuth2ClientOptions = {
         alias: "figma",
@@ -58,6 +62,7 @@ export class FigmaApp extends App {
         defaultScopes: ["file_read"],
         authorizationCallback: this.authorizationCallback.bind(this),
     };
+
 
     public async executeViewSubmitHandler(
         context: UIKitViewSubmitInteractionContext,
@@ -114,6 +119,7 @@ export class FigmaApp extends App {
         };
     }
 
+
     private async authorizationCallback(
         authData: IAuthData,
         user: IUser,
@@ -130,6 +136,7 @@ export class FigmaApp extends App {
         You will now be notified for all your Figma comments and notifications.
         You can subscribe to your team channel with files you want to receive notifications from.
         `;
+
         await sendDMToUser(read, modify, user, text, persistence);
     }
 
@@ -162,6 +169,7 @@ export class FigmaApp extends App {
         \xa0\xa0 • When you reply to a Figma comment here, your reply will automatically be added to the Figma file.
         \xa0\xa0 • Type \` /figma connect \` to connect your figma account to the rocket.chat server.
         \xa0\xa0 • Type \` /figma help  \` for command. `;
+
         await sendDMToUser(read, modify, user, welcomeMessage, persistence);
     }
 
@@ -172,6 +180,7 @@ export class FigmaApp extends App {
                 this.oauth2Options
             );
         }
+
         return this.oauth2ClientInstance;
     }
 
@@ -185,6 +194,7 @@ export class FigmaApp extends App {
                 new FigmaCommand(this)
             ),
         ]);
+
         configuration.api.provideApi({
             // register api endpoints for github webhooks
             visibility: ApiVisibility.PUBLIC,
