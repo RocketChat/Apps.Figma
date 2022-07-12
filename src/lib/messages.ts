@@ -42,6 +42,12 @@ export async function getDirectRoom(
     }
 }
 
+
+/**
+ *
+ * sends a message in the room/channel which is visible to everyone
+ */
+
 export async function sendMessage(
     modify: IModify,
     room: IRoom,
@@ -65,6 +71,29 @@ export async function sendMessage(
     return await modify.getCreator().finish(msg);
 }
 
+export async function appUserSendMessage(
+    read: IRead,
+    modify: IModify,
+    room: IRoom,
+    blocks?: BlockBuilder | [IBlock]
+): Promise<string> {
+    const appUser = (await read.getUserReader().getAppUser()) as IUser;
+    const msg = modify
+        .getCreator()
+        .startMessage()
+        .setSender(appUser)
+        .setRoom(room)
+        .setGroupable(false)
+        .setParseUrls(false);
+
+    if (blocks !== undefined) {
+        msg.setBlocks(blocks);
+    }
+
+    return await modify.getCreator().finish(msg);
+}
+
+
 export async function shouldSendMessage(
     read: IRead,
     persistence: IPersistence,
@@ -81,7 +110,12 @@ export async function shouldSendMessage(
     return notificationStatus ? notificationStatus.status : true;
 }
 
-export async function sendNotification(
+/**
+ *
+ * Sends notification to the user which is only visible to user. (  Only you can see this message )
+ */
+export async function sendNotificationToUsers(
+
     read: IRead,
     modify: IModify,
     user: IUser,
@@ -102,10 +136,16 @@ export async function sendNotification(
         msg.setBlocks(blocks);
     }
 
+    console.log("sending notification");
     return read.getNotifier().notifyUser(user, msg.getMessage());
 }
 
-export async function sendDM(
+/**
+ *
+ * User will receive a direct message by figma.bot.
+ */
+export async function sendDMToUser(
+
     read: IRead,
     modify: IModify,
     user: IUser,
