@@ -12,15 +12,14 @@ import {
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { IUIKitViewSubmitIncomingInteraction } from "@rocket.chat/apps-engine/definition/uikit/UIKitIncomingInteractionTypes";
-import { FigmaApp } from "../../FigmaApp";
 import { getAccessTokenForUser } from "../storage/users";
-import { FigmaSDK, getFileID, getProjectID, getTeamID } from "./sdk";
+import { getFileID, getProjectID, getTeamID } from "../sdk/subscription.sdk";
 import {
     appUserSendMessage,
     sendDMToUser,
     sendMessage,
     sendNotificationToUsers,
-} from "./messages";
+} from "../lib/messages";
 import { IState } from "../definition";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
@@ -29,6 +28,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { IModalContext } from "../definition";
+import { AddSubscription } from "./addSubscription";
 
 export async function createSubscription(
     context: UIKitViewSubmitInteractionContext,
@@ -50,6 +50,8 @@ export async function createSubscription(
 
     const room = await read.getRoomReader().getById(record.id!);
     const token = await getAccessTokenForUser(read, user);
+
+    const handler = new AddSubscription(this, read, http, modify, persistence);
 
     const headers: any = {
         Authorization: `Bearer ${token?.token}`,
@@ -105,7 +107,7 @@ export async function createSubscription(
         }
         return;
     } else if (state.type.type === "team") {
-        const teamId = getTeamID(state.URL.URL);
+        const teamId: string = getTeamID(state.URL.URL);
 
         if (teamId.length !== 19) {
             if (room) {
@@ -143,6 +145,8 @@ export async function createSubscription(
                     ],
                 });
             });
+
+            await handler.run(context, teamId);
             appUserSendMessage(read, modify, room, block);
             return;
         }

@@ -31,9 +31,14 @@ import {
     UIKitBlockInteractionContext,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
-import { createSubscription } from "./src/lib/createSubscriptionMessage";
+import { createSubscription } from "./src/subscription/createSubscription";
 import { IState } from "./src/definition";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
+import { figmaWebHooks } from "./src/endpoints/figmaEndpoints";
+import {
+    ApiSecurity,
+    ApiVisibility,
+} from "@rocket.chat/apps-engine/definition/api";
 
 export class FigmaApp extends App {
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -43,8 +48,8 @@ export class FigmaApp extends App {
     public user: IUser;
     public botName: string;
 
-    private oauth2ClientInstance: IOAuth2Client;
-    private oauth2Options: IOAuth2ClientOptions = {
+    public oauth2ClientInstance: IOAuth2Client;
+    public oauth2Options: IOAuth2ClientOptions = {
         alias: "figma",
         accessTokenUri: "https://www.figma.com/api/oauth/token",
         authUri: "https://www.figma.com/oauth",
@@ -180,5 +185,11 @@ export class FigmaApp extends App {
                 new FigmaCommand(this)
             ),
         ]);
+        configuration.api.provideApi({
+            // register api endpoints for github webhooks
+            visibility: ApiVisibility.PUBLIC,
+            security: ApiSecurity.UNSECURE,
+            endpoints: [new figmaWebHooks(this)],
+        });
     }
 }

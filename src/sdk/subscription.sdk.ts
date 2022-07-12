@@ -1,5 +1,7 @@
 import { IHttp } from "@rocket.chat/apps-engine/definition/accessors";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { FigmaApp } from "../../FigmaApp";
+import { IApiEndpointMetadata } from "@rocket.chat/apps-engine/definition/api";
 const crypto = require("crypto");
 
 const BaseFileHost = "https://www.figma.com/file/";
@@ -10,41 +12,7 @@ const BaseApiHost = "https://www.figma.com/api";
 const passcode = crypto.randomBytes(48).toString("hex");
 
 // figmaSDK class contains all the methods to interact with figma API
-export class FigmaSDK {
-    constructor(private readonly http: IHttp, private readonly accessToken) {}
 
-    public createWebhook(fileID: string, webhookUrl: string) {
-        return this.post("https://api.figma.com/v2/webhooks", {
-            active: true,
-            event_type: "FILE_COMMENT",
-            team_id: "1051788064684166795",
-            events: ["push"],
-            endpoint: webhookUrl,
-            passcode,
-            content_type: "json",
-        });
-    }
-
-    private async post(url: string, data: any): Promise<any> {
-        const response = await this.http.post(url, {
-            headers: {
-                "X-Figma-Token": this.accessToken,
-                "Content-Type": "application/json",
-                "User-Agent": "Rocket.Chat-Apps-Engine",
-            },
-            data,
-        });
-
-        console.log(response.statusCode);
-        // If it isn't a 2xx code, something wrong happened
-        if (!response.statusCode.toString().startsWith("2")) {
-            throw response;
-        }
-        console.log("figma response - ", response);
-
-        return JSON.parse(response.content || "{}");
-    }
-}
 //file url example - https://www.figma.com/file/b0l0lp73g04EgbqDeNiHh4/file-2
 export function getFileName(fileURL: string): string {
     if (!fileURL.startsWith(BaseFileHost)) {
@@ -82,4 +50,19 @@ export function getProjectID(teamURL: string): string {
     const id = teamURL.substring(BaseProjectHost.length).split("/")[0];
     const projectID = id;
     return projectID;
+}
+
+export async function getWebhookUrl(app: FigmaApp): Promise<string> {
+    const accessors = app.getAccessors();
+    const webhookEndpoint = accessors.providedApiEndpoints.find(
+        (endpoint) => endpoint.path === "figmawebhook"
+    ) as IApiEndpointMetadata;
+    let siteUrl: string = (await accessors.environmentReader
+        .getServerSettings()
+        .getValueById("Site_Url")) as string;
+    console.log("site url", siteUrl);
+    if (siteUrl.charAt(siteUrl.length - 1) === "/") {
+        siteUrl = siteUrl.substring(0, siteUrl.length - 1);
+    }
+    return siteUrl + webhookEndpoint.computedPath;
 }

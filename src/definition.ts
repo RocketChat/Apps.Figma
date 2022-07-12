@@ -14,3 +14,10 @@ export interface IState {
 export interface IModalContext extends Partial<IUIKitBlockIncomingInteraction> {
     id?: string;
 }
+export interface ISubscription {
+    webhook_id: string;
+    user: string;
+    name: string;
+    room: string;
+    event: string;
+}
