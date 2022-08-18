@@ -7,7 +7,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 
-//functions needed ro persist room data while modal and other UI interactions
+//functions needed to persist room data while modal and other UI interactions
 export const storeInteractionRoomData = async (
     persistence: IPersistence,
     userId: string,

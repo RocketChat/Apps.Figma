@@ -16,68 +16,76 @@ export class Subscription {
         private readonly persistenceRead: IPersistenceRead
     ) {}
 
-    /*
-     * this method is used to store the subscription in the database with the following associations
-     * 1. subscription
-     * 2. name:name
-     * 3. user:userId
-     * 4. room:roomId
-     * 5. event:event
+    /**
+     * This method is used to get the subscription
+     * @param name name of the file/team/project
+     * @param event event[] of the webhook
+     * @param projects projectIds[] of the webhook
+     * @param webhook_id webhook_id of the team
+     * @param team_id team_id of the team
+     * @param room IRoom object
+     * @param user IUser object
+     * @returns true if the subscription is deleted else false
      */
 
     public async storeSubscription(
         name: string,
-        event: string,
+        event: string[],
+        projects: string[],
         webhook_id: string,
+        team_id: string,
         room: IRoom,
         user: IUser
     ): Promise<boolean> {
+        console.log("store by room id - ", team_id);
         try {
             const associations: Array<RocketChatAssociationRecord> = [
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.MISC,
                     `subscription`
                 ),
+
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.MISC,
-                    `name:${name}`
+                    `webhook_id:${webhook_id}`
                 ),
+
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.ROOM,
                     room.id
                 ),
-                new RocketChatAssociationRecord(
-                    RocketChatAssociationModel.MISC,
-                    event
-                ),
+
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.USER,
-                    `${user.id}`
+                    `${team_id}`
                 ),
             ];
 
-            let subscriptionRecord: ISubscription = {
-                webhook_id: webhook_id,
+            const subscriptionRecord: ISubscription = {
+                webhook_id,
                 user: user.id,
-                name: name,
+                name,
                 room: room.id,
-                event: event,
+                projects,
+                team_id,
+                events: event,
             };
 
-            await this.persistence.updateByAssociations(
+            const recordId = await this.persistence.updateByAssociations(
                 associations,
-                subscriptionRecord,
-                true
+                subscriptionRecord
             );
+
+            console.log("subscription stored ✅✅✅✅✅✅", recordId);
         } catch (error) {
-            console.warn("Subsciption Error :", error);
+            console.warn("Subscription Error :", error);
             return false;
         }
         return true;
     }
 
     /**
-     * This method is used to get the subscription
+     * This method is used to get the subscription room by web
      * @param name name of the file/team/
      * @param event event name of the webhook
      * @returns true if the subscription is deleted else false
@@ -114,8 +122,9 @@ export class Subscription {
     }
 
     public async getSubscriptions(
-        roomId: string
+        team_id: string
     ): Promise<Array<ISubscription>> {
+        console.log("search by room id - ", team_id);
         try {
             const associations: Array<RocketChatAssociationRecord> = [
                 new RocketChatAssociationRecord(
@@ -124,7 +133,7 @@ export class Subscription {
                 ),
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.ROOM,
-                    roomId
+                    team_id
                 ),
             ];
             let subscriptions: Array<ISubscription> =
@@ -224,7 +233,6 @@ export class Subscription {
 
     public async getSubscriptionsByTeam(
         team_id: string,
-        userId: string
     ): Promise<Array<ISubscription>> {
         let subscriptions: Array<ISubscription> = [];
         try {
@@ -237,16 +245,41 @@ export class Subscription {
                     RocketChatAssociationModel.MISC,
                     `team_id:${team_id}`
                 ),
-                new RocketChatAssociationRecord(
-                    RocketChatAssociationModel.USER,
-                    `${userId}`
-                ),
             ];
             subscriptions = (await this.persistenceRead.readByAssociations(
                 associations
             )) as Array<ISubscription>;
         } catch (error) {
             console.warn("Get Subscriptions By Repo Error :", error);
+            return subscriptions;
+        }
+        return subscriptions;
+    }
+    public async getSubscriptionsByHookID(
+        hook_id: string,
+        event_type: string
+    ): Promise<Array<ISubscription>> {
+        let subscriptions: Array<ISubscription> = [];
+        try {
+            const associations: Array<RocketChatAssociationRecord> = [
+                new RocketChatAssociationRecord(
+                    RocketChatAssociationModel.MISC,
+                    `subscription`
+                ),
+                new RocketChatAssociationRecord(
+                    RocketChatAssociationModel.MISC,
+                    `hook_id:${hook_id}`
+                ),
+                new RocketChatAssociationRecord(
+                    RocketChatAssociationModel.USER,
+                    `${event_type}`
+                ),
+            ];
+            subscriptions = (await this.persistenceRead.readByAssociations(
+                associations
+            )) as Array<ISubscription>;
+        } catch (error) {
+            console.warn("Get Subscriptions By Hook id Error :", error);
             return subscriptions;
         }
         return subscriptions;

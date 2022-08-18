@@ -60,7 +60,6 @@ export async function getWebhookUrl(app: FigmaApp): Promise<string> {
     let siteUrl: string = (await accessors.environmentReader
         .getServerSettings()
         .getValueById("Site_Url")) as string;
-    console.log("site url", siteUrl);
     if (siteUrl.charAt(siteUrl.length - 1) === "/") {
         siteUrl = siteUrl.substring(0, siteUrl.length - 1);
     }

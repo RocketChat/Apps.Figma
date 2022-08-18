@@ -1,14 +1,25 @@
-import { IHttp, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
-import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
-import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
+import {
+    IHttp,
+    IModify,
+    IPersistence,
+    IRead,
+} from "@rocket.chat/apps-engine/definition/accessors";
+import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
+import { UIKitViewSubmitInteractionContext } from "@rocket.chat/apps-engine/definition/uikit";
 
-import { FigmaApp } from '../../FigmaApp';
-import { getWebhookUrl } from '../sdk/subscription.sdk';
-import { getAccessTokenForUser } from '../storage/users';
-import { Subscription } from '../sdk/webhooks.sdk';
-import { getInteractionRoomData } from '../storage/room';
-import { sendNotificationToUsers } from '../lib/messages';
-import { createSubscription, updateSubscription } from '../helpers/Figma.sdk';
+import { FigmaApp } from "../../FigmaApp";
+import { getTeamID, getWebhookUrl } from "../sdk/subscription.sdk";
+import { getAccessTokenForUser } from "../storage/users";
+import { Subscription } from "../sdk/webhooks.sdk";
+import { getInteractionRoomData } from "../storage/room";
+import { sendNotificationToUsers } from "../lib/messages";
+import { createSubscription, updateSubscription } from "../helpers/Figma.sdk";
+import { IProjectModalData } from "../definition";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
+import { IModalContext } from "../definition";
 
 export class AddSubscription {
     constructor(
@@ -16,91 +27,148 @@ export class AddSubscription {
         private readonly read: IRead,
         private readonly http: IHttp,
         private readonly modify: IModify,
-        private readonly persistence: IPersistence,
-    ) { }
+        private readonly persistence: IPersistence
+    ) {}
 
-    public async run(context: UIKitViewSubmitInteractionContext, teamId: string) {
-
+    public async run(context: UIKitViewSubmitInteractionContext, room: IRoom) {
         const { user, view } = context.getInteractionData();
-        const event_type = ['FILE_COMMENT', 'FILE_UPDATE'];
-        const team_id = teamId
+        const { state }: IProjectModalData = view as any;
+        const event_type = state?.selectedEvents.events;
+        const projectsIds = state?.selectedProjects.projects;
+        const team_id = getTeamID(state?.team_url.url);
+        const webhook_url = await getWebhookUrl(this.app);
 
         try {
             if (user.id) {
-                const { roomId } = await getInteractionRoomData(this.read.getPersistenceReader(), user.id);
+                if (
+                    typeof team_id == undefined ||
+                    typeof event_type == undefined
+                ) {
+                    await sendNotificationToUsers(
+                        this.read,
+                        this.modify,
+                        user,
+                        room,
+                        "Invalid Input !"
+                    );
+                } else {
+                    const accessToken = await getAccessTokenForUser(
+                        this.read,
+                        user
+                    );
 
-                        if (roomId) {
-                            let room = await this.read.getRoomReader().getById(roomId) as IRoom;
+                    if (!accessToken) {
+                        await sendNotificationToUsers(
+                            this.read,
+                            this.modify,
+                            user,
+                            room,
+                            "Connect with figma first !"
+                        );
+                    } else {
+                        console.log("here ----");
+                        const url = await getWebhookUrl(this.app);
+                        // check in persistence if subscription already exists for this team
 
-                            if (typeof (team_id) == undefined || typeof (event_type) == undefined) {
+                        const subscriptionStorage = new Subscription(
+                            this.persistence,
+                            this.read.getPersistenceReader()
+                        );
+                        // let subscribedEvents = new Map<string, boolean>;
 
-                                await sendNotificationToUsers(this.read, this.modify, user, room, "Invalid Input !");
-                            } else {
-                                let accessToken = await getAccessTokenForUser(this.read, user);
-                                if (!accessToken) {
-
-                                    await sendNotificationToUsers(this.read, this.modify, user, room, "Login To Github !");
+                        subscriptionStorage
+                            .getSubscriptionsByTeam(team_id)
+                            .then((subscriptions) => {
+                                console.log(
+                                    "subscriptions here ",
+                                    subscriptions
+                                );
+                                if (subscriptions && subscriptions.length) {
+                                    for (const subscription of subscriptions) {
+                                        //   subscribedEvents.set(subscription.events, true);
+                                        if (subscription.team_id === team_id) {
+                                            console.log(
+                                                "subscription already exists 🤔"
+                                            );
+                                        } else {
+                                            console.log(
+                                                "subscription exists but team_id not equal stored in memory 🤔"
+                                            );
+                                        }
+                                        console.log(
+                                            "subscription already exists 🤔"
+                                        );
+                                    }
                                 } else {
-                                    //if we have a webhook for the repo and our room requires the same event,we just make our entries to the apps storage instead of making a new hook
-                                    //if we have a hook but we dont have all the events, we send in a patch request,
+                                    const data = {
+                                        event_type: event_type[0],
+                                        team_id,
+                                        endpoint: url,
+                                        passcode: "123456789",
+                                        description: room.id,
+                                    };
 
-                                    let url = await getWebhookUrl(this.app);
-                                    console.log('url -', url)
-                                    let subscriptionStorage = new Subscription(this.persistence, this.read.getPersistenceReader());
-                                    let subscribedEvents = new Map<string, boolean>;
-                                    let hookId = "";
-
-
-                                    let subscriptions = await subscriptionStorage.getSubscriptionsByTeam(team_id, user.id);
-                                    console.log(subscriptions)
-                                    if (subscriptions && subscriptions.length) {
-                                        for (let subscription of subscriptions) {
-                                            subscribedEvents.set(subscription.event, true);
-                                            if (hookId == "") {
-                                                hookId = subscription.webhook_id;
+                                    this.http
+                                        .post(
+                                            `https://api.figma.com/v2/webhooks`,
+                                            {
+                                                headers: {
+                                                    Authorization: `Bearer ${accessToken?.token}`,
+                                                },
+                                                data,
                                             }
-                                        }
-                                    }
-                                    let additionalEvents = 0;
-                                    for (let event of event_type) {
-                                        if (!subscribedEvents.has(event)) {
-                                            additionalEvents++;
-                                            subscribedEvents.set(event, true);
-                                        }
-                                    }
-                                   let response: any;
-                                   //if hook is null we create a new hook, else we add more events to the new hook
-                                   if (hookId == "") {
-                                       response = await createSubscription(this.http, team_id, url, accessToken.token, event_type);
-                                   }
-                                     else {
-                                         //if hook is already present, we just need to send a patch request to add new events to existing hook
-                                         let newEvent_type: Array<string> = [];
-                                         for (let [event, present] of subscribedEvents) {
-                                             newEvent_type.push(event);
-                                         }
-                                         if (additionalEvents && newEvent_type.length) {
-                                             response = await updateSubscription(this.http, team_id, accessToken.token, hookId, newEvent_type);
-                                         }
-                                     }
-                                     let createdEntry = false;
-                                     //subscribe rooms to hook events
-                                     for (let event of event_type) {
-                                         createdEntry = await subscriptionStorage.storeSubscription(team_id, event, response?.id, room, user);
-                                     }
-                                     if (!createdEntry) {
-                                         throw new Error("Error creating new subscription entry");
-                                     }
-                                     await sendNotificationToUsers(this.read, this.modify, user, room, `Subscibed to ${team_id} ✔️`);
-                                }
+                                        )
+                                        .then(async (res) => {
+                                            if (res.data.error) {
+                                                console.log(
+                                                    "error - ",
+                                                    res.data
+                                                );
+                                                throw new Error(res.data.error);
+                                            } else {
+                                                console.log(
+                                                    "success - ",
+                                                    res.data
+                                                );
+                                                const hookId = res.data.id;
 
-                            }
-                        }
+                                                await subscriptionStorage
+                                                    .storeSubscription(
+                                                        "hello",
+                                                        event_type,
+                                                        projectsIds,
+                                                        hookId,
+                                                        team_id,
+                                                        room,
+                                                        user
+                                                    )
+                                                    .then((res) => {
+                                                        console.log(
+                                                            "storage response - ",
+                                                            res
+                                                        );
+                                                    });
+                                            }
+                                        })
+                                        .catch((err) => {
+                                            console.log(
+                                                "error subscribing file",
+                                                err
+                                            );
+                                        });
+                                }
+                                // if hook is null we create a new hook, else we add more events to the new hook
+                            })
+                            .catch((err) =>
+                                console.log("error subscribing project", err)
+                            );
+                    }
+                    return;
+                }
             }
         } catch (error) {
-            console.log('error : ', error);
+            console.log("error : ", error);
         }
-
         return {
             success: true,
         };

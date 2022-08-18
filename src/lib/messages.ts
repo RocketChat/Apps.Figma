@@ -129,7 +129,6 @@ export async function sendNotificationToUsers(
     if (blocks) {
         msg.setBlocks(blocks);
     }
-    console.log("sending notification");
     return read.getNotifier().notifyUser(user, msg.getMessage());
 }
 

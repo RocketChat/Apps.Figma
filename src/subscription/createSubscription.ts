@@ -56,9 +56,8 @@ export async function createSubscription(
     const headers: any = {
         Authorization: `Bearer ${token?.token}`,
     };
-    console.log("type - ", state.type.type);
-    if (state.type.type === "file") {
-        const fileId = getFileID(state.URL.URL);
+    if (state.resource_type.type === "file") {
+        const fileId = getFileID(state.team_url.url);
 
         // if user inserts a wrong url
         if (fileId.length !== 22) {
@@ -98,7 +97,7 @@ export async function createSubscription(
                     block.newButtonElement({
                         text: block.newPlainTextObject("Open in Figma"),
                         actionId: "open",
-                        url: state.URL.URL,
+                        url: state.team_url.url,
                     }),
                 ],
             });
@@ -106,8 +105,8 @@ export async function createSubscription(
             appUserSendMessage(read, modify, room, block);
         }
         return;
-    } else if (state.type.type === "team") {
-        const teamId: string = getTeamID(state.URL.URL);
+    } else if (state.resource_type.type === "team") {
+        const teamId: string = getTeamID(state.team_url.url);
 
         if (teamId.length !== 19) {
             if (room) {
@@ -125,7 +124,6 @@ export async function createSubscription(
             `https://api.figma.com/v1/teams/${teamId}/projects`,
             { headers }
         );
-
         if (room) {
             const block = modify.getCreator().getBlockBuilder();
             block.addSectionBlock({
@@ -146,12 +144,12 @@ export async function createSubscription(
                 });
             });
 
-            await handler.run(context, teamId);
+            await handler.run(context, room);
             appUserSendMessage(read, modify, room, block);
             return;
         }
-    } else if (state.type.type === "project") {
-        const projectID = getProjectID(state.URL.URL);
+    } else if (state.resource_type.type === "project") {
+        const projectID = getProjectID(state.team_url.url);
 
         if (projectID.length !== 8) {
             if (room) {

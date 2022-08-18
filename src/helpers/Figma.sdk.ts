@@ -9,9 +9,6 @@ async function postRequest(
     url: string,
     data: any
 ): Promise<any> {
-    console.log("url - ", url);
-    console.log("data - ", data);
-    console.log("access token -", accessToken);
     const response = await http.post(url, {
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -20,8 +17,6 @@ async function postRequest(
         },
         data,
     });
-    console.log("webhook response post request -", response);
-
     // If it isn't a 2xx code, something wrong happened
     if (!response.statusCode.toString().startsWith("2")) {
         throw response;

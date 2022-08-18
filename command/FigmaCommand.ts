@@ -60,6 +60,7 @@ export class FigmaCommand implements ISlashCommand {
                 );
                 break;
             case "subscribe":
+    
                 await figmaSubscribeCommand(
                     context,
                     read,
@@ -69,6 +70,7 @@ export class FigmaCommand implements ISlashCommand {
                     context.getRoom(),
                     context.getSender()
                 );
+
                 break;
             default:
                 await this.figmaConfuseCommand(
