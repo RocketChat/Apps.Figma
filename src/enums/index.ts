@@ -1,0 +1,8 @@
+enum events {
+    UPDATE = "FILE_UPDATE",
+    DELETE = "FILE_DELETE",
+    COMMENT = "FILE_COMMENT",
+    VERSION_UPDATE = "FILE_VERSION_UPDATE",
+    LIBRARY_PUBLISHED = "LIBRARY_PUBLISH",
+}
+export { events };
