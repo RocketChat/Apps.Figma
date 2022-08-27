@@ -1,84 +1,78 @@
-import {
-    IPersistence,
-    IRead,
-} from "@rocket.chat/apps-engine/definition/accessors";
-import {
-    RocketChatAssociationModel,
-    RocketChatAssociationRecord,
-} from "@rocket.chat/apps-engine/definition/metadata";
-import {
-    IAuthData,
-    IOAuth2ClientOptions,
-} from "@rocket.chat/apps-engine/definition/oauth2/IOAuth2";
-import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import {IPersistence,
+	IRead,} from '@rocket.chat/apps-engine/definition/accessors';
+import {RocketChatAssociationModel,
+	RocketChatAssociationRecord,} from '@rocket.chat/apps-engine/definition/metadata';
+import {IAuthData,
+	IOAuth2ClientOptions,} from '@rocket.chat/apps-engine/definition/oauth2/IOAuth2';
+import {IUser} from '@rocket.chat/apps-engine/definition/users';
 
 const assoc = new RocketChatAssociationRecord(
-    RocketChatAssociationModel.MISC,
-    "users"
+	RocketChatAssociationModel.MISC,
+	'users',
 );
 
 export async function create(
-    read: IRead,
-    persistence: IPersistence,
-    user: IUser
+	read: IRead,
+	persistence: IPersistence,
+	user: IUser,
 ): Promise<void> {
-    const users = await getAllUsers(read);
+	const users = await getAllUsers(read);
 
-    if (!users) {
-        await persistence.createWithAssociation([user], assoc);
-        return;
-    }
+	if (!users) {
+		await persistence.createWithAssociation([user], assoc);
+		return;
+	}
 
-    if (!isUserPresent(users, user)) {
-        users.push(user);
-        await persistence.updateByAssociation(assoc, users);
-    }
+	if (!isUserPresent(users, user)) {
+		users.push(user);
+		await persistence.updateByAssociation(assoc, users);
+	}
 }
 
 export async function remove(
-    read: IRead,
-    persistence: IPersistence,
-    user: IUser
+	read: IRead,
+	persistence: IPersistence,
+	user: IUser,
 ): Promise<void> {
-    const users = await getAllUsers(read);
+	const users = await getAllUsers(read);
 
-    if (!users || !isUserPresent(users, user)) {
-        return;
-    }
+	if (!users || !isUserPresent(users, user)) {
+		return;
+	}
 
-    const idx = users.findIndex((u: IUser) => u.id === user.id);
-    users.splice(idx, 1);
-    await persistence.updateByAssociation(assoc, users);
+	const idx = users.findIndex((u: IUser) => u.id === user.id);
+	users.splice(idx, 1);
+	await persistence.updateByAssociation(assoc, users);
 }
 
 export async function getAllUsers(read: IRead): Promise<IUser[]> {
-    const data = await read.getPersistenceReader().readByAssociation(assoc);
-    return data.length ? (data[0] as IUser[]) : [];
+	const data = await read.getPersistenceReader().readByAssociation(assoc);
+	return data.length ? (data[0] as IUser[]) : [];
 }
 
 function isUserPresent(users: IUser[], targetUser: IUser): boolean {
-    return users.some((user) => user.id === targetUser.id); // Returns true if the provided value is present in the array.
+	return users.some(user => user.id === targetUser.id); // Returns true if the provided value is present in the array.
 }
 
 export async function getAccessTokenForUser(
-    read: IRead,
-    user: IUser,
+	read: IRead,
+	user: IUser,
 ): Promise<IAuthData | undefined> {
-    const associations = [
-        new RocketChatAssociationRecord(
-            RocketChatAssociationModel.USER,
-            user.id
-        ),
-        new RocketChatAssociationRecord(
-            RocketChatAssociationModel.MISC,
-            `figma-oauth-connection`
-        ),
-    ];
-    const [result] = (await read
-        .getPersistenceReader()
-        .readByAssociations(associations)) as unknown as Array<
-        IAuthData | undefined
-    >;
+	const associations = [
+		new RocketChatAssociationRecord(
+			RocketChatAssociationModel.USER,
+			user.id,
+		),
+		new RocketChatAssociationRecord(
+			RocketChatAssociationModel.MISC,
+			'figma-oauth-connection',
+		),
+	];
+	const [result] = (await read
+		.getPersistenceReader()
+		.readByAssociations(associations)) as unknown as Array<
+	IAuthData | undefined
+	>;
 
-    return result;
+	return result;
 }
