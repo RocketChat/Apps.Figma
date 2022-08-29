@@ -16,6 +16,7 @@ import {BlockElementType,
 	TextObjectType} from '@rocket.chat/apps-engine/definition/uikit';
 import { figmaSubscribeCommand } from './Subscribe';
 import { figmaConnectCommand } from './Connect';
+import { figmaSubscribedCommand } from './Subscriptions';
 
 export class FigmaCommand implements ISlashCommand {
 	public command = 'figma';
@@ -62,6 +63,17 @@ export class FigmaCommand implements ISlashCommand {
 				context.getSender()
 			);
 
+			break;
+		case 'subscriptions':
+			await figmaSubscribedCommand(
+				context,
+				read,
+				modify,
+				http,
+				persistence,
+				context.getRoom(),
+				context.getSender()
+			);
 			break;
 		default:
 			await this.figmaConfuseCommand(

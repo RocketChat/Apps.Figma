@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import {IPersistence,
 	IPersistenceRead} from '@rocket.chat/apps-engine/definition/accessors';
 import {RocketChatAssociationModel,
@@ -75,16 +76,17 @@ export class Subscription {
     	room: IRoom,
     	user: IUser,
     	event_name: string,
-    	projects_id?: string[],
-    	files_id?: string[]
+    	projects_id: string[] | undefined,
+    	files_id: string[] | undefined
     ): Promise<string> {
     	const room_data: storedRoomData[] = [
     		{
-    			room_id: room.id,
-    			project_ids: projects_id,
-    			file_ids: files_id
+    			room_Id: room.id,
+    			project_Ids: projects_id,
+    			file_Ids: files_id
     		}
     	];
+    	console.log('room data stored is - ', room_data);
     	try {
     		const associations: RocketChatAssociationRecord[] = [
     			new RocketChatAssociationRecord(
@@ -181,7 +183,7 @@ export class Subscription {
     ): Promise<string> {
     	try {
 
-    		console.log('[11] - inside subscription update ');
+    		console.log('inside subscription update - room data > ', room_data);
     		 const associations: RocketChatAssociationRecord[] = [
     			new RocketChatAssociationRecord(
     				RocketChatAssociationModel.MISC,
@@ -212,12 +214,6 @@ export class Subscription {
     			event_name,
     			room_data
     		};
-    		 console.log('[12] - subscription record - ', subscriptionRecord);
-    		 console.log(
-    		 	'[13] Updated Subscription record 🙋🏻‍♂️ for - ',
-    		 	subscriptionRecord.event_name
-    		 );
-
     		 const recordId = await this.persistence.updateByAssociations(
     		 	associations, // associations may be different if it is creating a new record
     		 	subscriptionRecord,

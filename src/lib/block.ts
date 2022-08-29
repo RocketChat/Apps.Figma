@@ -10,7 +10,8 @@ export type IButton = {
 export async function createSectionBlock(
 	modify: IModify,
 	sectionText: string,
-	button?: IButton,
+	button?: IButton | undefined,
+	buttonGroup?: IButton[] | undefined,
 ): Promise<BlockBuilder> {
 	const blocks = modify.getCreator().getBlockBuilder();
 
@@ -28,7 +29,18 @@ export async function createSectionBlock(
 				}),
 			],
 		});
+	} else if (buttonGroup) {
+		blocks.addActionsBlock({
+			elements: buttonGroup.map((button) => {
+				return blocks.newButtonElement({
+					actionId: button.actionId,
+					text: blocks.newPlainTextObject(button.text),
+					url: button.url,
+				});
+			}),
+		});
 	}
+
 
 	return blocks;
 }

@@ -1,6 +1,6 @@
 import { IUIKitBlockIncomingInteraction } from '@rocket.chat/apps-engine/definition/uikit/UIKitIncomingInteractionTypes';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
-import { events } from './enums';
+import { events } from './enums/index';
 
 export type IState = {
     state: {
@@ -18,9 +18,9 @@ export type IModalContext = {
 } & Partial<IUIKitBlockIncomingInteraction>;
 
 export type storedRoomData = {
-    room_id: string | undefined;
-    project_ids?: string[];
-    file_ids?: string[];
+    room_Id: string | undefined;
+    project_Ids?: string[];
+    file_Ids?: string[];
 };
 export type ISubscription = {
     webhook_id: string;
@@ -48,6 +48,7 @@ export type IProjectModalData = {
         team_url: { url: string };
         selectedEvents: { events: string[] };
         selectedProjects: { projects: string[] | undefined };
+        selectedFiles: { files: string[] | undefined };
     };
 };
 
@@ -65,7 +66,7 @@ export type ICommentPayload = {
     ];
     comment_id: string;
     created_at: string;
-    event_type: events;
+    event_type: string;
     file_key: string;
     file_name: string;
     mentions: [
@@ -87,14 +88,14 @@ export type ICommentPayload = {
 };
 
 export type IPingPayload = {
-    event_type: events;
+    event_type: string;
     passcode: string;
     timestamp: Date;
     webhook_id: string;
 };
 
 export type IUpdatePayload = {
-    event_type: events;
+    event_type: string;
     file_key: string;
     file_name: string;
     passcode: string;
@@ -102,7 +103,7 @@ export type IUpdatePayload = {
     webhook_id: string;
 };
 export type IDeletePayload = {
-    event_type: events;
+    event_type: string;
     file_key: string;
     file_name: string;
     passcode: string;
@@ -116,7 +117,7 @@ export type IDeletePayload = {
 export type IVersionUpdatePayload = {
     created_at: Date;
     description: string;
-    event_type: events;
+    event_type: string;
     file_key: string;
     file_name: string;
     label: string;
@@ -155,7 +156,7 @@ export type ILibraryPublishPayload = {
         }
     ];
     description: string;
-    event_type: events;
+    event_type: string;
     file_key: string;
     file_name: string;
     modified_components: [

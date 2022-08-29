@@ -70,7 +70,6 @@ export class FigmaApp extends App {
 				context.getInteractionData().view.title.text ===
                 'Select Event Types'
 			) {
-				console.log('-----------------------------------------------------------------');
 				const handler = new AddSubscription(
 					this,
 					read,
@@ -78,7 +77,7 @@ export class FigmaApp extends App {
 					modify,
 					persistence
 				);
-
+				console.log('-1');
 				return await handler.run(context, room)
 					.catch((err) => console.log('error submitting 2nd modal', err));
 			} else if (
@@ -92,7 +91,6 @@ export class FigmaApp extends App {
 					modify,
 					persistence
 				);
-				// when the second modal is submitted then console.log the data
 				return await handler.run(context, room);
 			} else {
 				console.log('❎❎❎❎❎❎ No modal called ❎❎❎❎❎❎');
@@ -110,6 +108,7 @@ export class FigmaApp extends App {
 		modify: IModify
 	) {
 		const data = context.getInteractionData();
+        console.log('execute block action handler - ', data);
 		// const handler = new BlockActionHandler(
 		//     this,
 		//     read,
@@ -120,6 +119,7 @@ export class FigmaApp extends App {
 		// return await handler.run(context);
 	}
 
+	// todo: add modal cancel handler
 	private async authorizationCallback(
 		authData: IAuthData,
 		user: IUser,
@@ -128,8 +128,8 @@ export class FigmaApp extends App {
 		http: IHttp,
 		persistence: IPersistence
 	) {
-        if (authData) {
-            console.log('user auth data - ', authData, user);
+		if (authData) {
+			console.log('user auth data - ', authData, user);
 			await registerAuthorizedUser(read, persistence, user);
 		}
 

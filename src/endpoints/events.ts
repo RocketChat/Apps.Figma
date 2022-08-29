@@ -15,27 +15,52 @@ export async function commentEvent(
 		comment = payload.comment[0].text + ' ' + payload.comment[1].mention + ' ' + payload.comment[2].text;
 	} else {
 		comment = payload.comment[0].text;
-    }
-    // now send a message with comment as quote to all the subscribed users
-    
-	console.log('[6] these subscriptions found with the matching hook id - ',subscriptions);
+	}
+	// now send a message with comment as quote to all the subscribed users
 	for (const subscription of subscriptions) {
 		for (const roomData of subscription.room_data) {
 			const room = await read
 				.getRoomReader()
-				.getById(roomData.room_id!);
+				.getById(roomData.room_Id!);
 
 			const user = await read
 				.getUserReader()
 				.getById(subscription.user_id);
 
 			if (room) {
-				await sendMessage(modify, room, user, messageText);
+				if ((!roomData.project_Ids || roomData.project_Ids.length == 0) &&  (roomData.file_Ids || roomData.file_Ids!.length > 0)) {
+					console.log('roomData has files init - ', roomData);
+					if (roomData.file_Ids!.includes(payload.file_key)) {
+						const message = `${payload.triggered_by.handle} commented on ${payload.file_name} - ${comment}`;
+						await sendMessage(
+							modify,
+							room,
+							user,
+							message
+						);
+					}
+
+				} else if ((!roomData.file_Ids || roomData.file_Ids.length == 0) && (roomData.project_Ids || roomData.project_Ids!.length > 0)) {
+					console.log('roomData has projects init - ', roomData);
+					// files does not exist this means that there are projects in the room then if the project is present send the message to the room
+					// for project we will have to store all the files we are getting from that project and then check if the file is present in the files array
+					if (roomData.file_Ids?.includes(payload.file_key)) {
+						const message = `${payload.triggered_by.handle} commented on ${payload.file_key} - ${comment}`;
+						await sendMessage(
+							modify,
+							room,
+							user,
+							message
+						);
+					}
+
+				} else if (!roomData.file_Ids && !roomData.project_Ids) {
+					console.log('roomData has no files or projects init - ', roomData);
+					// both project ids and file ids array are undefined which means subscription is for the whole team
+				}
+
 			} else {
-				console.log(
-					'[5] - Figma pinged but room not found - ',
-					roomData,
-				);
+				console.log( 'Figma pinged but room not found - ', roomData );
 			}
 		}
 	}
@@ -47,28 +72,7 @@ export async function deleteEvent(
 	read: IRead,
 	http: IHttp
 ) {
-	const messageText = `${payload.triggered_by.handle} commented '${payload.comment[0].text}' on file - ${payload.file_name}`;// todo : fix the comment text
-	console.log('[6] these subscriptions found with the matching hook id - ',subscriptions);
-	for (const subscription of subscriptions) {
-		for (const roomData of subscription.room_data) {
-			const room = await read
-				.getRoomReader()
-				.getById(roomData.room_id!);
-
-			const user = await read
-				.getUserReader()
-				.getById(subscription.user_id);
-
-			if (room) {
-				await sendMessage(modify, room, user, messageText);
-			} else {
-				console.log(
-					'[5] - Figma pinged but room not found - ',
-					roomData,
-				);
-			}
-		}
-	}
+	//
 }
 export async function updateEvent(
 	payload: ICommentPayload,
@@ -77,25 +81,7 @@ export async function updateEvent(
 	read: IRead,
 	http: IHttp
 ) {
-	const messageText = `${payload.triggered_by.handle} commented '${payload.comment[0].text}' on file - ${payload.file_name}`;// todo : fix the comment text
-	console.log('[6] these subscriptions found with the matching hook id - ',subscriptions);
-	for (const subscription of subscriptions) {
-		for (const roomData of subscription.room_data) {
-			const room = await read
-				.getRoomReader()
-				.getById(roomData.room_id!);
-
-			const user = await read
-				.getUserReader()
-				.getById(subscription.user_id);
-
-			if (room) {
-				await sendMessage(modify, room, user, messageText);
-			} else {
-				console.log('[5] - Figma pinged but room not found - ', roomData);
-			}
-		}
-	}
+	//
 }
 export async function publishEvent(
 	payload: ICommentPayload,
@@ -104,28 +90,7 @@ export async function publishEvent(
 	read: IRead,
 	http: IHttp
 ) {
-	const messageText = `${payload.triggered_by.handle} commented '${payload.comment[0].text}' on file - ${payload.file_name}`;// todo : fix the comment text
-	console.log('[6] these subscriptions found with the matching hook id - ',subscriptions);
-	for (const subscription of subscriptions) {
-		for (const roomData of subscription.room_data) {
-			const room = await read
-				.getRoomReader()
-				.getById(roomData.room_id!);
-
-			const user = await read
-				.getUserReader()
-				.getById(subscription.user_id);
-
-			if (room) {
-				await sendMessage(modify, room, user, messageText);
-			} else {
-				console.log(
-					'[5] - Figma pinged but room not found - ',
-					roomData,
-				);
-			}
-		}
-	}
+	//
 }
 export async function versionUpdateEvent(
 	payload: ICommentPayload,
@@ -134,26 +99,5 @@ export async function versionUpdateEvent(
 	read: IRead,
 	http: IHttp
 ) {
-	const messageText = `${payload.triggered_by.handle} commented '${payload.comment[0].text}' on file - ${payload.file_name}`;// todo : fix the comment text
-	console.log('[6] these subscriptions found with the matching hook id - ',subscriptions);
-	for (const subscription of subscriptions) {
-		for (const roomData of subscription.room_data) {
-			const room = await read
-				.getRoomReader()
-				.getById(roomData.room_id!);
-
-			const user = await read
-				.getUserReader()
-				.getById(subscription.user_id);
-
-			if (room) {
-				await sendMessage(modify, room, user, messageText);
-			} else {
-				console.log(
-					'[5] - Figma pinged but room not found - ',
-					roomData,
-				);
-			}
-		}
-	}
+	//
 }

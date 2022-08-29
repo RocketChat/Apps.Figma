@@ -5,7 +5,7 @@ import {Subscription} from '../sdk/webhooks.sdk';
 import {ICommentPayload, IDeletePayload, ILibraryPublishPayload, ISubscription, IUpdatePayload, IVersionUpdatePayload} from '../definition';
 import { sendMessage, sendNotificationToUsers } from '../lib/messages';
 import { getAllUsers } from '../storage/users';
-import { events } from '../enums';
+import { events } from '../enums/index';
 import { commentEvent, deleteEvent } from './events';
 
 export class figmaWebHooks extends ApiEndpoint {
@@ -19,7 +19,7 @@ export class figmaWebHooks extends ApiEndpoint {
 		modify: IModify,
 		http: IHttp,
 		persis: IPersistence,
-	){
+	): Promise<IApiResponse>{
 		let payload: any;
 		// If the event is a push event, the payload is a json object else it is a string
 		if (
@@ -33,21 +33,7 @@ export class figmaWebHooks extends ApiEndpoint {
 
 		if (payload.event_type === events.PING) {
 			console.log('[4] PING from figma - ', payload);
-			// If its an ping event then store the subscription inside the storage with all the details
-			// let subscriptionStorage = new Subscription(
-			//     persis,
-			//     read.getPersistenceReader()
-			// );
-			// const subscriptions: Array<ISubscription> =
-			//     await subscriptionStorage.getSubscribedRooms(
-			//         payload.webhook_id,
-			//     );
-			// if (!subscriptions || subscriptions.length == 0) {
-			//     return this.success();
-			// }
-
-			// const eventCaps = event.toUpperCase();
-			// let messageText = "newEvent !";
+			// todo : send message to the user that a new connection was made successfully
 			return this.success();
 		}
 
@@ -63,18 +49,15 @@ export class figmaWebHooks extends ApiEndpoint {
 			console.log('[5] - Figma Pinged but No subscriptions found - ', payload);
 			return this.success();
 		}
-
-		console.log(
-			'[5] - Figma pinged and matching Subscriptions found - ',
-			payload,
-		);
-		// now we will check the event type and for different event type we will have different types of messages to e sent to the respective rooms
+		console.log('Figma pinged and matching Subscriptions found - ', subscriptions); // there should be only one subscription with one hook id
+	
 		const eventCaps = payload.event_type.toUpperCase();
 
 		// switch case statement for event types
 		switch (eventCaps) {
 		case events.COMMENT:
-			return await commentEvent(payload as ICommentPayload, subscriptions, modify, read, http);
+			await commentEvent(payload as ICommentPayload, subscriptions, modify, read, http);
+			break;
 
 		// case events.DELETE:
 		// 	// send message to the rooms for the delete event
@@ -92,6 +75,6 @@ export class figmaWebHooks extends ApiEndpoint {
 			// send message to the rooms for error
 			return this.success();
 		}
-
+		return this.success();
 	}
 }
