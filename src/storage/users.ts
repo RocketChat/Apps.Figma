@@ -2,8 +2,7 @@ import {IPersistence,
 	IRead,} from '@rocket.chat/apps-engine/definition/accessors';
 import {RocketChatAssociationModel,
 	RocketChatAssociationRecord,} from '@rocket.chat/apps-engine/definition/metadata';
-import {IAuthData,
-	IOAuth2ClientOptions,} from '@rocket.chat/apps-engine/definition/oauth2/IOAuth2';
+import {IAuthData,} from '@rocket.chat/apps-engine/definition/oauth2/IOAuth2';
 import {IUser} from '@rocket.chat/apps-engine/definition/users';
 
 const assoc = new RocketChatAssociationRecord(
@@ -11,13 +10,21 @@ const assoc = new RocketChatAssociationRecord(
 	'users',
 );
 
+type IFigmaUserData = {
+    id: string;
+    email: string;
+    handle: string;
+    img_url: string;
+}
 export async function create(
 	read: IRead,
 	persistence: IPersistence,
 	user: IUser,
+    userData: IAuthData,
+    figmaData: IfigmaUserData
 ): Promise<void> {
 	const users = await getAllUsers(read);
-
+    
 	if (!users) {
 		await persistence.createWithAssociation([user], assoc);
 		return;

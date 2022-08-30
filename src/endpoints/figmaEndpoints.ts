@@ -5,7 +5,7 @@ import {Subscription} from '../sdk/webhooks.sdk';
 import {ICommentPayload, IDeletePayload, ILibraryPublishPayload, ISubscription, IUpdatePayload, IVersionUpdatePayload} from '../definition';
 import { sendMessage, sendNotificationToUsers } from '../lib/messages';
 import { getAllUsers } from '../storage/users';
-import { events } from '../enums/index';
+import { events } from '../enums/enums';
 import { commentEvent, deleteEvent } from './events';
 
 export class figmaWebHooks extends ApiEndpoint {
@@ -50,7 +50,7 @@ export class figmaWebHooks extends ApiEndpoint {
 			return this.success();
 		}
 		console.log('Figma pinged and matching Subscriptions found - ', subscriptions); // there should be only one subscription with one hook id
-	
+
 		const eventCaps = payload.event_type.toUpperCase();
 
 		// switch case statement for event types

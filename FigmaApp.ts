@@ -24,10 +24,10 @@ import { figmaWebHooks } from './src/endpoints/figmaEndpoints';
 import {ApiSecurity,
 	ApiVisibility} from '@rocket.chat/apps-engine/definition/api';
 import { ExecuteViewSubmitHandler } from './src/handlers/submit';
-import { BlockActionHandler } from './src/handlers/action';
 import { AddSubscription } from './src/subscription/addSubscription';
 import { IModalContext } from './src/definition';
 import { getInteractionRoomData } from './src/storage/room';
+import { BlockActionHandler } from './src/handlers/BlockActionHandler';
 
 export class FigmaApp extends App {
 	constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -107,16 +107,10 @@ export class FigmaApp extends App {
 		persistence: IPersistence,
 		modify: IModify
 	) {
-		const data = context.getInteractionData();
-        console.log('execute block action handler - ', data);
-		// const handler = new BlockActionHandler(
-		//     this,
-		//     read,
-		//     http,
-		//     modify,
-		//     persistence
-		// );
-		// return await handler.run(context);
+		// handle action when the subscriptions buttons are clicked
+		const blockActionHandler = new BlockActionHandler(this, read, http, modify, persistence);
+		console.log('block action handler');
+		return blockActionHandler.run(context, read, http, persistence, modify);
 	}
 
 	// todo: add modal cancel handler
@@ -130,7 +124,13 @@ export class FigmaApp extends App {
 	) {
 		if (authData) {
 			console.log('user auth data - ', authData, user);
-			await registerAuthorizedUser(read, persistence, user);
+			const userData = await http.get('https://api.figma.com/v1/me', {
+				headers: {
+					Authorization: `Bearer ${authData.token}`
+				}
+			});
+		 console.log('user data - ', userData.Data);
+		 await registerAuthorizedUser(read, persistence, user, authData, userData.Data);
 		}
 
 		const text = `Authentication was successful! ✨

@@ -6,7 +6,7 @@ import {RocketChatAssociationModel,
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { ISubscription, storedRoomData } from '../definition';
-import { events } from '../enums/index';
+import { events } from '../enums/enums';
 
 export class Subscription {
     [x: string]: any;

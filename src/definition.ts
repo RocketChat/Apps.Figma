@@ -1,6 +1,6 @@
 import { IUIKitBlockIncomingInteraction } from '@rocket.chat/apps-engine/definition/uikit/UIKitIncomingInteractionTypes';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
-import { events } from './enums/index';
+import { events } from './enums/enums';
 
 export type IState = {
     state: {

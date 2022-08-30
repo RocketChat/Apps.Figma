@@ -6,6 +6,7 @@ import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { IButton } from '../src/lib/block';
 import { createSectionBlock } from '../src/lib/block';
+import { blockAction } from '../src/enums/enums';
 
 export async function figmaSubscribedCommand(
 	context: SlashCommandContext,
@@ -18,22 +19,9 @@ export async function figmaSubscribedCommand(
 	id?: string
 ) {
 	// todo: use createSectionBlock to create a block with a button group for now this is temporary
-	const buttonGroup: IButton[] = [
-		{
-			text: 'Files',
-			actionId: 'getFiles'
-		},
-		{
-			text: 'Projects',
-			actionId: 'getProjects'
-		},
-		{
-			text: 'Teams',
-			actionId: 'getTeams'
-		}
-	];
-
+	const builder = await modify.getCreator().startMessage().setRoom(room);
 	const block = modify.getCreator().getBlockBuilder();
+
 	block.addSectionBlock({
 		text: {
 			type: TextObjectType.PLAINTEXT,
@@ -41,39 +29,29 @@ export async function figmaSubscribedCommand(
 		},
 	});
 
-	block.newButtonElement({
-		text: {
-			type: TextObjectType.PLAINTEXT,
-			text: 'File'
-		},
-		actionId: 'getFiles'
+	block.addActionsBlock({
+		blockId: blockAction.SUBSCRIPTIONS,
+		elements: [
+			block.newButtonElement({
+				actionId: blockAction.FILES,
+				text: block.newPlainTextObject('Files'),
+				value: 'files',
+			}),
+			block.newButtonElement({
+				actionId: blockAction.PROJECTS,
+				text: block.newPlainTextObject('Projects'),
+				value: 'projects',
+			}),
+			block.newButtonElement({
+				actionId: blockAction.TEAMS,
+				text: block.newPlainTextObject('Team'),
+				value: 'team',
+			}),
+		],
 	});
+	builder.setBlocks(block);
 
-	block.newButtonElement({
-		text: {
-			type: TextObjectType.PLAINTEXT,
-			text: 'Projects'
-		},
-		actionId: 'getProjects'
-	});
-
-	block.newButtonElement({
-		text: {
-			type: TextObjectType.PLAINTEXT,
-			text: 'Teams'
-		},
-		actionId: 'getTeams'
-	});
-
-	// blocks are created send a message to the user now
-	const msg = modify
-		.getCreator()
-		.startMessage()
-		.setSender(sender)
-		.setRoom(room)
-		.setGroupable(false)
-		.setParseUrls(false);
-	msg.setBlocks(block);
-
-	await modify.getCreator().finish(msg);
+	await modify
+		.getNotifier()
+		.notifyUser(sender, builder.getMessage());
 }

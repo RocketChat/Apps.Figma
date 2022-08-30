@@ -6,4 +6,11 @@ enum events {
 	VERSION_UPDATE = 'FILE_VERSION_UPDATE',
 	LIBRARY_PUBLISHED = 'LIBRARY_PUBLISH',
 }
-export {events};
+
+enum blockAction {
+    SUBSCRIPTIONS='GET_SUBSCRIPTIONS',
+    FILES = 'GET_FILES',
+    PROJECTS = 'GET_PROJECTS',
+    TEAMS = 'GET_TEAMS',
+}
+export {events, blockAction};

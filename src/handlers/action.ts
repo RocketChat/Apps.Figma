@@ -8,7 +8,7 @@ import { FigmaApp } from '../../FigmaApp';
 import { getTeamID } from '../sdk/subscription.sdk';
 import { getAccessTokenForUser } from '../storage/users';
 import { IProjectsResponse } from '../definition';
-import { events } from '../enums/index';
+import { events } from '../enums/enums';
 
 type file = {
     key: string;
