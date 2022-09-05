@@ -123,14 +123,12 @@ export class FigmaApp extends App {
 		persistence: IPersistence
 	) {
 		if (authData) {
-			console.log('user auth data - ', authData, user);
 			const userData = await http.get('https://api.figma.com/v1/me', {
 				headers: {
 					Authorization: `Bearer ${authData.token}`
 				}
 			});
-		 console.log('user data - ', userData.Data);
-		 await registerAuthorizedUser(read, persistence, user, authData, userData.Data);
+		 await registerAuthorizedUser(read, persistence, user, authData, userData.data);
 		}
 
 		const text = `Authentication was successful! ✨

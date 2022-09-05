@@ -286,6 +286,7 @@ export class Subscription {
     public async deleteAllTeamSubscriptions(
     	team_id: string
     ): Promise<object[]> {
+        console.log('team id - ', team_id);
     	try {
     		const associations: RocketChatAssociationRecord[] = [
     			new RocketChatAssociationRecord(
@@ -297,7 +298,6 @@ export class Subscription {
     				`team_id:${team_id}`
     			)
     		];
-    		console.log('associations - ', associations);
     		return await this.persistence.removeByAssociations(associations);
     	} catch (error) {
     		console.warn('Delete All Room Subscription Error :', error);

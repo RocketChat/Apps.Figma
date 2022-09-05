@@ -2,6 +2,15 @@ import { IUIKitBlockIncomingInteraction } from '@rocket.chat/apps-engine/definit
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { events } from './enums/enums';
 
+export type IFigmaUserData = {
+    id: string;
+    email: string;
+    handle: string;
+    img_url: string;
+}
+export interface NewIUser extends IUser {
+    figmaUserId?: string;
+}
 export type IState = {
     state: {
         resource_type: {

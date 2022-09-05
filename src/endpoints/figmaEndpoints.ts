@@ -32,7 +32,7 @@ export class figmaWebHooks extends ApiEndpoint {
 		}
 
 		if (payload.event_type === events.PING) {
-			console.log('[4] PING from figma - ', payload);
+			//console.log('PING from figma - ', payload.webhook_id);
 			// todo : send message to the user that a new connection was made successfully
 			return this.success();
 		}
