@@ -8,6 +8,13 @@ export type IFigmaUserData = {
     handle: string;
     img_url: string;
 }
+
+export type file = {
+    key: string;
+    name: string;
+    thumbnail_url: string;
+    last_modified: Date;
+};
 export interface NewIUser extends IUser {
     figmaUserId?: string;
 }

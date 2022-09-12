@@ -1,7 +1,7 @@
 import { SlashCommandContext } from '@rocket.chat/apps-engine/definition/slashcommands';
 import {  IRead,  IModify, IHttp, IPersistence} from '@rocket.chat/apps-engine/definition/accessors';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
-import { sendDMToUser, sendNotificationToUsers } from '../src/lib/messages';
+import { sendDMToUser, botNotifyCurrentUser } from '../src/lib/messages';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { getAccessTokenForUser } from '../src/storage/users';
 import { RocketChatAssociationModel,  RocketChatAssociationRecord} from '@rocket.chat/apps-engine/definition/metadata';
@@ -24,7 +24,7 @@ export async function figmaSubscribeCommand(
 
 	if (!accessToken?.token) {
 		const message = 'Your have not connected your account yet. Use `/figma connect` to connect your account.';
-		await sendNotificationToUsers(read, modify, sender, room, message);
+		await botNotifyCurrentUser(read, modify, sender, room, message);
 		return;
 	}
 

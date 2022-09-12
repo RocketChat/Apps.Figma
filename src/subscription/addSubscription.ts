@@ -5,22 +5,17 @@ import {IHttp,
 	IPersistence,
 	IRead} from '@rocket.chat/apps-engine/definition/accessors';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
-import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
+import { TextObjectType, UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
 
 import { FigmaApp } from '../../FigmaApp';
 import { getTeamID, getWebhookUrl } from '../sdk/subscription.sdk';
 import { getAccessTokenForUser } from '../storage/users';
 import { Subscription } from '../sdk/webhooks.sdk';
-import { sendMessage, sendNotificationToUsers } from '../lib/messages';
+import { botMessageChannel, botNotifyCurrentUser } from '../lib/messages';
 import { IProjectModalData } from '../definition';
 import { events } from '../enums/enums';
-import { storedRoomData } from '../definition';
-import { newProjectSubscription } from './newProjectSubscription';
-import { newFileSubscription } from './newFileSubscription';
-import { newTeamSubscription } from './newTeamSubscription';
 import { createWebhookResponseHandler } from './createWebhookResponseHandler';
 import { updateSubscriptionHandler } from './updateSubscriptionHandler';
-
 export class AddSubscription {
 	constructor(
         private readonly app: FigmaApp,
@@ -38,7 +33,6 @@ export class AddSubscription {
             state?.selectedProjects?.projects;
 		const file_Ids: string[] | undefined = state?.selectedFiles?.files;
 		const team_id = getTeamID(state?.team_url.url);
-		const webhook_url = await getWebhookUrl(this.app);
 
 		// Refer this fig jam file for the flow of this code https://www.figma.com/file/hufAYVAtxhcxv56WKM0jLi/Figma-App?node-id=7%3A308
 
@@ -48,7 +42,7 @@ export class AddSubscription {
 					typeof team_id === undefined ||
                     typeof event_type === undefined
 				) {
-					await sendNotificationToUsers(
+					await botNotifyCurrentUser(
 						this.read,
 						this.modify,
 						user,
@@ -61,7 +55,7 @@ export class AddSubscription {
 						user
 					);
 					if (!accessToken) {
-						await sendNotificationToUsers(
+						await botNotifyCurrentUser(
 							this.read,
 							this.modify,
 							user,
@@ -74,17 +68,15 @@ export class AddSubscription {
 							this.persistence,
 							this.read.getPersistenceReader()
 						);
-
-						console.log('user sent data - ', state);
 						subscriptionStorage
 							.getAllSubscriptions()
 							.then((r) => {
-								console.log(r);
 								r.forEach((subscription) => {
-									console.log(
-										'ALL SUBSCRIPTIONS - ',
-										subscription.room_data
-									);
+									 console.log(
+									 	'-1 - all subscriptions - ',
+										subscription.room_data,
+										subscription.event_name
+									 );
 								});
 							})
 							.catch((e) => {
@@ -94,25 +86,24 @@ export class AddSubscription {
 								);
 							});
 
-						// subscriptionStorage.deleteAllTeamSubscriptions(team_id).then((res) => {
-						//        console.log('deleted subscriptions - ', res);
-						//    });
+						//  subscriptionStorage.deleteAllTeamSubscriptions(team_id).then((res) => {
+						//         console.log('deleted subscriptions - ', res);
+						//     });
 						let count = 0; // this counter we will use if if there are only 4 or less hooks left to create in figma we will notify the use that subscription was unsuccessful and delete some in figma
 						subscriptionStorage
 							.getSubscriptionsByTeam(team_id)
-							.then((subscriptions) => {
+							.then(async (subscriptions) => {
 								if (subscriptions && subscriptions.length) {
-									console.log('1');
 									for (const subscription of subscriptions) {
-										console.log('2');
+										console.log('1 - found subscription for event 🤯 ', subscription.event_name);
 										if (
 											subscription.team_id === team_id &&
                                             subscription.room_data.length > 0
 										) {
 											// now we are entering the room data zone to modify it.
 											for (const room_data of subscription.room_data) {
-												console.log('3');
-												return updateSubscriptionHandler(
+												console.log('2 - team id matched 🏡 ', room_data);
+												updateSubscriptionHandler(
 													room,
 													user,
 													room_data,
@@ -127,14 +118,14 @@ export class AddSubscription {
 										} else {
 											// If the room does not exist then update the subscription
 											console.log(
-												'subscription does not exist',
+												'2 - subscription does not exist ❌ ',
 												subscription.team_id,
 												subscription.room_data
 											);
 										}
 									}
-									return;
 								} else {
+									let counter = 0;
 									[
 										events.COMMENT,
 										events.DELETE,
@@ -150,6 +141,7 @@ export class AddSubscription {
 											passcode: room.id, // Send room id as passcode
 											description: room.id
 										};
+
 										this.http // we send request to figma webhook to create a hook fro every event
 											.post(
 												'https://api.figma.com/v2/webhooks',
@@ -163,11 +155,11 @@ export class AddSubscription {
 											.then(async (response) => {
 												// when a hook is created successfully we save it in db
 												if (
-													response.statusCode === 400
+													response.data.error === true
 												) {
 													// todo : manage this logic in a better way which covers all the edge cases. If for any request there is a error response then delete the created hooks and send the error message to user
-													if (count === 4) {
-														await sendNotificationToUsers(
+													if (counter === 4) {
+														await botNotifyCurrentUser(
 															this.read,
 															this.modify,
 															user,
@@ -176,9 +168,9 @@ export class AddSubscription {
 														);
 														// todo: for now figma gives a reason and says to delete a webhook but modify it to say at least 5 webhooks.
 													}
-													return;
 												} else {
-													return createWebhookResponseHandler(
+													await createWebhookResponseHandler(
+														this.modify,
 														this.persistence,
 														this.read,
 														this.http,
@@ -190,29 +182,36 @@ export class AddSubscription {
 														team_id,user,
 														event_type,
 														event,
-													);
+													).then(async () => {
+														if (counter===4) {
+															const block = this.modify.getCreator().getBlockBuilder();
+															block.addSectionBlock({
+																text: {
+																	text: `A new subscriptions is created successfully by ${user.name}. You will start receiving notifications for updates and comments inside the team in this channel.`,
+																	type: TextObjectType.PLAINTEXT,
+																},
+															});
+															await botMessageChannel(this.read, this.modify, room, block);
+														}
+														return;
+													}).catch(async () => {
+														if (count === 4) {
+															await botNotifyCurrentUser(this.read, this.modify, user, room, 'error subscribing to the file please try again');
+														}
+														return;
+													});
 												}
+												counter++;
 											})
 											.catch((e) => {
-												sendMessage(
-													this.modify,
-													room,
-													user,
-													`Error Subscribing to file from figma, ${e.message}`
-												);
-												return;
+												botNotifyCurrentUser(this.read, this.modify, user, room, `Error Subscribing to file from figma, ${e.message}`);
 											})
 											.finally(() => count++);
 									});
-									return;
 								}
 							})
-							.catch((err) => {
-								console.log(
-									'Error getting subscriptions from storage - ',
-									err
-								);
-								return;
+							.catch(async (err) => {
+								return await botNotifyCurrentUser(this.read, this.modify, user, room, `Error Subscribing to file from figma, ${err.message}`);
 							});
 					}
 
@@ -220,7 +219,7 @@ export class AddSubscription {
 				}
 			}
 		} catch (error) {
-			console.log('error user id does not exist : ', error);
+			return await  botNotifyCurrentUser(this.read, this.modify, user, room, `Error Subscribing to file from figma, ${error.message}`);
 		}
 
 		return {

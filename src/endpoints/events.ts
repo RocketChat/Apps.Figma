@@ -1,4 +1,4 @@
-import { IHttp, IModify, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import { IHttp, IModify, IRead, IPersistence } from '@rocket.chat/apps-engine/definition/accessors';
 import {  ICommentPayload, IDeletePayload, IUpdatePayload , IVersionUpdatePayload , ILibraryPublishPayload, ISubscription, storedRoomData } from '../definition';
 import { sendMessage } from '../lib/messages';
 import { getAllUsers } from '../storage/users';
@@ -9,21 +9,25 @@ export async function commentEvent(
 	subscriptions: ISubscription[],
 	modify: IModify,
 	read: IRead,
-	http: IHttp
+	http: IHttp,
+	persistence: IPersistence
 )  {
 	let comment = ''; // todo : fix the comment text
-	// it contains an array of 3 then the first element is the text and the second is the mention and the third is the text after mention
-	if (payload.comment.length == 3) {
-		// someone is mentioned in the comment get the person and match that id with user id form getAllUsers and ping him
+
+	if (payload.comment.length >= 2) {
 		await getAllUsers(read).then((users) => {
-			const user = users.find((user) => user.id === payload.mentions[0].id);
-			console.log('users - ', users);
-			//todo: handle for multiple mentions
-			if (user) {
-				comment =  payload.comment[0].text + ' @' + payload.comment[1].mention + ' ' + payload.comment[2].text;
-			} else {
-				comment = payload.comment[0].text;
-			}
+			payload.comment.forEach((element: any) => {
+				if (element.mention) {
+					const user = users.find((user) => user.figmaUserId === element.mention);
+					if (user) {
+						comment += `@${user.username} `;
+					} else {
+						comment += `${element.text} `;
+					}
+				} else {
+					comment += element.text;
+				}
+			});
 		}).catch(e => console.log('error finding user in db mentioned in comment - ', e));
 	} else {
 		comment = payload.comment[0].text;
@@ -39,7 +43,7 @@ export async function commentEvent(
 				.getUserReader()
 				.getById(subscription.user_id);
 			// split this into multiple files
-			await useCommentEvent(room, roomData, user, payload, modify, comment);
+			await useCommentEvent(room, read, roomData, user, payload, modify, comment, persistence);
 		}
 	}
 }

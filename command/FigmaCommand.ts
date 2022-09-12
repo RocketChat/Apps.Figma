@@ -9,7 +9,7 @@ import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { createSectionBlock, IButton } from '../src/lib/block';
 import {sendDMToUser,
 	sendMessage,
-	sendNotificationToUsers} from '../src/lib/messages';
+	botNotifyCurrentUser} from '../src/lib/messages';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { getAccessTokenForUser } from '../src/storage/users';
 import {BlockElementType,
@@ -114,6 +114,6 @@ export class FigmaCommand implements ISlashCommand {
 		const message = `Hmmm. I didn't really understand that last message.
          Try \`/figma help\` to see the commands available
          `;
-		await sendNotificationToUsers(read, modify, user, room, message);
+		await botNotifyCurrentUser(read, modify, user, room, message);
 	}
 }

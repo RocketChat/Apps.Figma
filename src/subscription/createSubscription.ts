@@ -10,10 +10,10 @@ import {BlockElementType,
 import {IUIKitViewSubmitIncomingInteraction} from '@rocket.chat/apps-engine/definition/uikit/UIKitIncomingInteractionTypes';
 import {getAccessTokenForUser} from '../storage/users';
 import {getFileID, getProjectID, getTeamID} from '../sdk/subscription.sdk';
-import {appUserSendMessage,
+import {botMessageChannel,
 	sendDMToUser,
 	sendMessage,
-	sendNotificationToUsers,} from '../lib/messages';
+	botNotifyCurrentUser,} from '../lib/messages';
 import {IState} from '../definition';
 import {IUser} from '@rocket.chat/apps-engine/definition/users';
 import {IRoom} from '@rocket.chat/apps-engine/definition/rooms';
@@ -54,7 +54,7 @@ export async function createSubscription(
 		// If user inserts a wrong url
 		if (fileId.length !== 22) {
 			if (room) {
-				sendNotificationToUsers(
+				botNotifyCurrentUser(
 					read,
 					modify,
 					user,
@@ -97,14 +97,14 @@ export async function createSubscription(
 				],
 			});
 
-			appUserSendMessage(read, modify, room, block);
+			botMessageChannel(read, modify, room, block);
 		}
 	} else if (state.resource_type.type === 'team') {
 		const teamId: string = getTeamID(state.team_url.url);
 
 		if (teamId.length !== 19) {
 			if (room) {
-				sendNotificationToUsers(
+				botNotifyCurrentUser(
 					read,
 					modify,
 					user,
@@ -143,14 +143,14 @@ export async function createSubscription(
 			});
 
 			await handler.run(context, room);
-			appUserSendMessage(read, modify, room, block);
+			botMessageChannel(read, modify, room, block);
 		}
 	} else if (state.resource_type.type === 'project') {
 		const projectID = getProjectID(state.team_url.url);
 
 		if (projectID.length !== 8) {
 			if (room) {
-				sendNotificationToUsers(
+				botNotifyCurrentUser(
 					read,
 					modify,
 					user,
@@ -189,7 +189,7 @@ export async function createSubscription(
 					],
 				});
 			});
-			appUserSendMessage(read, modify, room, block);
+			botMessageChannel(read, modify, room, block);
 		}
 	}
 }

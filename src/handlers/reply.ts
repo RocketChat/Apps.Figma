@@ -1,4 +1,6 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import {IHttp,
+	IHttpRequest,
 	IModify,
 	IPersistence,
 	IPersistenceRead,
@@ -16,8 +18,9 @@ import {IState, IModalContext} from '../definition';
 import {botNotifyCurrentUser} from '../lib/messages';
 import {RocketChatAssociationModel,
 	RocketChatAssociationRecord,} from '@rocket.chat/apps-engine/definition/metadata';
+import { getAccessTokenForUser } from '../storage/users';
 
-export class ExecuteViewSubmitHandler {
+export class ExecuteReplyHandler {
 	constructor(
 		private readonly app: FigmaApp,
 		private readonly read: IRead,
@@ -27,62 +30,30 @@ export class ExecuteViewSubmitHandler {
 	) {}
 
 	public async run(context: UIKitViewSubmitInteractionContext, room: IRoom) {
-		const data = context.getInteractionData();
-		const {state}: IState = data.view as any;
-		const team_url = state?.team_url?.url;
-		const resource_type = state.resource_type.type;
+		console.log('inside run function');
 
-		const {user} = context.getInteractionData();
-
+		const view  = context.getInteractionData().view as any;
+		const { user } = context.getInteractionData();
+		const accessToken = await getAccessTokenForUser(this.read, user);
+		console.log('access token - ', accessToken?.token);
+		console.log('view - ', view);
 		if (room) {
-			if (!resource_type) {
-				console.log('resource type not selected 🔴');
-				botNotifyCurrentUser(
-					this.read,
-					this.modify,
-					user,
-					room,
-					'Please select a resource type',
-				);
-				return;
-			}
+			const postData: IHttpRequest = {
+				headers: {
+					Authorization: `Bearer ${accessToken?.token}`,
+				},
+				data: {
+					message: view.state.comment_reply.reply,
+					comment_id: view.commentData.commentId
+				}
+			};
+			this.http.post(`https://api.figma.com/v1/files/${view.commentData.fileKey}/comments`,  postData).then(async (res) => {
+				await botNotifyCurrentUser(this.read, this.modify, user, room, 'Comment added successfully');
+			}).catch(async (e) => {
+				await botNotifyCurrentUser(this.read, this.modify, user, room, `${e.data.message}`);
+			});
 
-			if (!team_url) {
-				console.log('team url not entered 🔴');
-				botNotifyCurrentUser(
-					this.read,
-					this.modify,
-					user,
-					room,
-					'Please enter a team url',
-				);
-				return;
-			}
-
-			if (!resource_type || !team_url) {
-				console.log('team url and resource type not entered 🔴');
-				botNotifyCurrentUser(
-					this.read,
-					this.modify,
-					user,
-					room,
-					'Please enter a team url and a resource type',
-				);
-				return;
-			}
-
-			const handler = new BlockActionHandler(
-				this.app,
-				this.read,
-				this.http,
-				this.modify,
-				this.persistence,
-				user,
-				room,
-			);
-			return handler.run(context, team_url, resource_type);
 		}
-
 		return {
 			success: true
 		};

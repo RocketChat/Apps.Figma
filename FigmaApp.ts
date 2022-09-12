@@ -17,7 +17,7 @@ import { sendDMToUser } from './src/lib/messages';
 import { create as registerAuthorizedUser } from './src/storage/users';
 import { createOAuth2Client } from '@rocket.chat/apps-engine/definition/oauth2/OAuth2';
 import { FigmaCommand } from './command/FigmaCommand';
-import {UIKitBlockInteractionContext,
+import {IBlock, IUIKitResponse, UIKitActionButtonInteractionContext, UIKitBlockInteractionContext,
 	UIKitViewSubmitInteractionContext} from '@rocket.chat/apps-engine/definition/uikit';
 import { IProjectModalData, IState } from './src/definition';
 import { figmaWebHooks } from './src/endpoints/figmaEndpoints';
@@ -28,7 +28,7 @@ import { AddSubscription } from './src/subscription/addSubscription';
 import { IModalContext } from './src/definition';
 import { getInteractionRoomData } from './src/storage/room';
 import { BlockActionHandler } from './src/handlers/BlockActionHandler';
-
+import { ExecuteReplyHandler } from './src/handlers/reply';
 export class FigmaApp extends App {
 	constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
 		super(info, logger, accessors);
@@ -55,6 +55,9 @@ export class FigmaApp extends App {
 		persistence: IPersistence,
 		modify: IModify
 	) {
+		console.log(context.getInteractionData().view.title.text + ' view submit handler');
+
+		console.log('submit handler');
 		const user: IUser = context.getInteractionData().user;
 
 		const roomFromStorage = await getInteractionRoomData(
@@ -77,7 +80,6 @@ export class FigmaApp extends App {
 					modify,
 					persistence
 				);
-				console.log('-1');
 				return await handler.run(context, room)
 					.catch((err) => console.log('error submitting 2nd modal', err));
 			} else if (
@@ -92,12 +94,37 @@ export class FigmaApp extends App {
 					persistence
 				);
 				return await handler.run(context, room);
-			} else {
-				console.log('❎❎❎❎❎❎ No modal called ❎❎❎❎❎❎');
+			} else if (
+				context.getInteractionData().view.title.text ===
+                'Reply to Comment'
+			) {
+				// reply to comment block
+				console.log('inside reply to comment block');
+				const handler = new ExecuteReplyHandler(
+					this,
+					read,
+					http,
+					modify,
+					persistence
+				);
+				return await handler.run(context, room);
+			}
+			else {
+				console.log('❎❎❎❎❎❎', context.getInteractionData().view.title.text, '❎❎❎❎❎❎');
 				return;
 			}
 		}
 		return;
+	}
+
+	public async executeActionButtonHandler(
+		context: UIKitActionButtonInteractionContext,
+		read: IRead,
+		http: IHttp,
+		persistence: IPersistence,
+		modify: IModify
+	) {
+		console.log('executeActionButtonHandler');
 	}
 
 	public async executeBlockActionHandler(
@@ -107,9 +134,9 @@ export class FigmaApp extends App {
 		persistence: IPersistence,
 		modify: IModify
 	) {
-		// handle action when the subscriptions buttons are clicked
-		const blockActionHandler = new BlockActionHandler(this, read, http, modify, persistence);
 		console.log('block action handler');
+		// handle action when the subscriptions buttons are clicked
+		const blockActionHandler = new BlockActionHandler(this, read, http, modify, persistence,);
 		return blockActionHandler.run(context, read, http, persistence, modify);
 	}
 

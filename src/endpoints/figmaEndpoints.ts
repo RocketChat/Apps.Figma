@@ -3,7 +3,7 @@ import {IRead, IHttp, IModify, IPersistence} from '@rocket.chat/apps-engine/defi
 import {IApiEndpointInfo, IApiRequest, IApiResponse} from '@rocket.chat/apps-engine/definition/api';
 import {Subscription} from '../sdk/webhooks.sdk';
 import {ICommentPayload, IDeletePayload, ILibraryPublishPayload, ISubscription, IUpdatePayload, IVersionUpdatePayload} from '../definition';
-import { sendMessage, sendNotificationToUsers } from '../lib/messages';
+import { sendMessage, botNotifyCurrentUser } from '../lib/messages';
 import { getAllUsers } from '../storage/users';
 import { events } from '../enums/enums';
 import { commentEvent, deleteEvent } from './events';
@@ -32,8 +32,9 @@ export class figmaWebHooks extends ApiEndpoint {
 		}
 
 		if (payload.event_type === events.PING) {
-			//console.log('PING from figma - ', payload.webhook_id);
+			//console.log('PING from figma - ', payload);
 			// todo : send message to the user that a new connection was made successfully
+			//await sendMessage(modify, room, user, 'New connection made successfully');
 			return this.success();
 		}
 
@@ -43,20 +44,18 @@ export class figmaWebHooks extends ApiEndpoint {
 		);
 
 		// Search subscriptions by webhook id in the stored subscriptions
-		const subscriptions: ISubscription[]
-            = await subscription.getSubscriptionsByHookID(payload.webhook_id);
+		const subscriptions: ISubscription[]  = await subscription.getSubscriptionsByHookID(payload.webhook_id);
+		// todo : handle if there are multiple webhooks for a single file
 		if (!subscriptions || subscriptions.length == 0) {
-			console.log('[5] - Figma Pinged but No subscriptions found - ', payload);
+			console.log('❌ Figma Pinged but No subscriptions found - ', payload.webhook_id);
 			return this.success();
 		}
-		console.log('Figma pinged and matching Subscriptions found - ', subscriptions); // there should be only one subscription with one hook id
-
 		const eventCaps = payload.event_type.toUpperCase();
 
 		// switch case statement for event types
 		switch (eventCaps) {
 		case events.COMMENT:
-			await commentEvent(payload as ICommentPayload, subscriptions, modify, read, http);
+			await commentEvent(payload as ICommentPayload, subscriptions, modify, read, http, persis);
 			break;
 
 		// case events.DELETE:

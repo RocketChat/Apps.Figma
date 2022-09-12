@@ -12,5 +12,11 @@ enum blockAction {
     FILES = 'GET_FILES',
     PROJECTS = 'GET_PROJECTS',
     TEAMS = 'GET_TEAMS',
+    REPLY = 'REPLY_TO_COMMENT',
+    OPEN_FILE = 'OPEN_FILE',
+    REACT = 'REACT_TO_COMMENT',
+    POST = 'POST_REPLY',
+    FILE_ACTIONS = 'FILES_ACTIONS',
+    COMMENT = 'COMMENT_ON_FILE',
 }
 export {events, blockAction};

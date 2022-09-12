@@ -1,17 +1,25 @@
-import { IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import { IHttp, IHttpRequest, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import { IAuthData } from '@rocket.chat/apps-engine/definition/oauth2/IOAuth2';
+import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
+import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { file } from '../definition';
+import { botMessageChannel } from '../lib/messages';
 import { Subscription } from '../sdk/webhooks.sdk';
 
 export async function newProjectSubscription(
-	event,
+	event: string,
+	http: IHttp,
 	read: IRead,
+	modify: IModify,
 	persistence: IPersistence,
-	room,
-	useSentEvent,
-	project_Ids,
-	accessToken,
-	team_id,
-	user,
-	response,
+	room: IRoom,
+	useSentEvent: string[],
+	project_Ids: string[],
+	accessToken: IAuthData,
+	team_id: string,
+	user: IUser,
+	response: IHttpRequest,
 ) {
 	let projects_to_be_stored: string[] | undefined;
 	let files_to_be_stored: string[] | undefined;
@@ -20,11 +28,11 @@ export async function newProjectSubscription(
 		persistence,
 		read.getPersistenceReader(),
 	);
-
-	if (useSentEvent === event) {
+	if (useSentEvent.includes(event)) { // if the event in array of user passed events matches with loop event then it will be stored with files else empty file array
+		files_to_be_stored = [];
 		projects_to_be_stored = project_Ids;
-		await Promise.all(project_Ids!.map(async (project_id) => {
-			await this.http.get(
+		await Promise.all(project_Ids.map(async (project_id) => { // this will run for all project ids for all these store them in one file
+			await http.get(
 				`https://api.figma.com/v1/projects/${project_id}/files`,
 				{
 					headers: {
@@ -32,30 +40,36 @@ export async function newProjectSubscription(
 					}
 				},
 			).then(async response => {
-				console.log('response from figma while storing all the projects into db - ', response.status);
-				// we got the response of all the files from figma now we will have to store them inside file_Ids array in room data
-				// we need this in order to identify if a user subscribed to a particular project does the figma event file is in that project or not.
-				files_to_be_stored = response.data.files.map((file) => file.id);
-				console.log('project storing files - ', files_to_be_stored, ' - for event - ', event);
-				return await subscriptionStorage.storeSubscriptionByEvent(
-					'subscription',
-					response.data.id,
-					team_id,
-					room,
-					user,
-					event,
-					projects_to_be_stored, // projects
-					files_to_be_stored, // storing files along with projects
-				);
+				const tempArr = response.data.files.map((file: file) => file.key);
+				tempArr.forEach(element => {
+					files_to_be_stored?.push(element);
+				});
 
-			}).catch((e) => {
-				console.log('error from project subscriptions - ', e);
-				return;
+			}).catch(async () => {
+				const block = this.modify.getCreator().getBlockBuilder();
+				block.addSectionBlock({
+					text: {
+						text: 'Error in fetching Projects. Please Report this issue',
+						type: TextObjectType.PLAINTEXT,
+					},
+				});
+				return await botMessageChannel(this.read, this.modify, room, block);
 			});
 		}));
+		await subscriptionStorage.storeSubscriptionByEvent(
+			'subscription',
+			response.data.id,
+			team_id,
+			room,
+			user,
+			event,
+			projects_to_be_stored, // projects
+			files_to_be_stored // storing files along with projects
+		);
+		// clear the files_to_be_stored array after storing all projects
+		files_to_be_stored = undefined;
 		return;
 	} else {
-		console.log('files will not be stored for ', event,' - in project subscription');
 		return await subscriptionStorage.storeSubscriptionByEvent(
 			'subscription',
 			response.data.id,
@@ -64,7 +78,8 @@ export async function newProjectSubscription(
 			user,
 			event,
 			projects_to_be_stored,
-			files_to_be_stored,
+			files_to_be_stored
 		);
 	}
+	return;
 }

@@ -1,7 +1,9 @@
+import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { storedRoomData } from '../definition';
 export async function updateSubscriptionHandler(
-	room,
-	user,
+	room: IRoom,
+	user: IUser,
 	room_data,
 	event_type,
 	subscription,
@@ -87,6 +89,7 @@ export async function updateSubscriptionHandler(
 				);
 		}
 	} else {
+		// create a new subscription as it previously did not exist
 		if (event_type.includes(subscription.event_name)) {
 			const newRoomData: storedRoomData[] = [
 				...subscription.room_data,
@@ -96,6 +99,7 @@ export async function updateSubscriptionHandler(
 					file_Ids: file_Ids
 				}
 			];
+			console.log('3 - room did not exist previously so ');
 			subscriptionStorage
 				.updateSubscriptionByTeamId(
 					newRoomData,

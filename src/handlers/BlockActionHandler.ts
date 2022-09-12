@@ -2,16 +2,19 @@ import {IHttp,
 	ILogger,
 	IModify,
 	IPersistence,
-	IRead,} from '@rocket.chat/apps-engine/definition/accessors';
+	IRead} from '@rocket.chat/apps-engine/definition/accessors';
 import { IApp } from '@rocket.chat/apps-engine/definition/IApp';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
-import {  UIKitInteractionContext} from '@rocket.chat/apps-engine/definition/uikit';
+import { UIKitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
 import { SlashCommandContext } from '@rocket.chat/apps-engine/definition/slashcommands';
 import { blockAction } from '../enums/enums';
 import { IUIKitResponse } from '@rocket.chat/apps-engine/definition/uikit';
 import { UIKitBlockInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
 import { getFiles } from '../lib/getFiles';
 import { getInteractionRoomData } from '../storage/room';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { commentReply } from '../lib/commentReply';
+import { newComment } from '../lib/comment';
 
 export class BlockActionHandler {
 	constructor(
@@ -28,13 +31,11 @@ export class BlockActionHandler {
 		http: IHttp,
 		persistence: IPersistence,
 		modify: IModify,
-		//slashcommandcontext?: SlashCommandContext,
 		uikitcontext?: UIKitInteractionContext
 	): Promise<IUIKitResponse> {
-
+        console.log('here' )
 		const data = context.getInteractionData();
 		const { actionId, user } = data;
-
 		const roomFromStorage = await getInteractionRoomData(
 			read.getPersistenceReader(),
 			user.id
@@ -43,30 +44,59 @@ export class BlockActionHandler {
 			.getRoomReader()
 			.getById(roomFromStorage.roomId!);
 
-		try {
-			switch (actionId) {
-			case blockAction.FILES:
-				console.log('clicked on file');
-				await getFiles(context, persistence, read, data, room, http);
-				return context.getInteractionResponder().successResponse();
-			case blockAction.PROJECTS:
-				console.log('clicked on project');
-				break;
-			case blockAction.TEAMS:
-				console.log('clicked on team');
-				break;
-			default:
-				break;
+		if (room) {
+			// todo: remove figma subscriptions command to happen inside figma bot DM's
+			try {
+				switch (actionId) {
+				case blockAction.FILES:
+					console.log('📂 file');
+					await getFiles(
+						modify,
+						context,
+						persistence,
+						read,
+						data,
+						room,
+						user,
+						http
+					);
+					return context
+						.getInteractionResponder()
+						.successResponse();
+				case blockAction.PROJECTS:
+					console.log('clicked on project');
+					break;
+				case blockAction.TEAMS:
+					console.log('clicked on team');
+					break;
+				case blockAction.REPLY:
+					await commentReply(modify, context, persistence, read, data, room, user, http);
+					break;
+				case blockAction.OPEN_FILE:
+					console.log('open file');
+					break;
+				case blockAction.REACT:
+					console.log('reaction');
+					break;
+				case blockAction.POST:
+					console.log('post');
+					break;
+				case blockAction.COMMENT:
+					await newComment(modify, context, persistence, read, data, room, user, http);
+					break;
+				default:
+					break;
+				}
+			} catch (error) {
+				console.log('error - ', error);
+				return context.getInteractionResponder().viewErrorResponse({
+					viewId: actionId,
+					errors: error
+				});
 			}
-		} catch (error) {
-			console.log('error - ', error);
-			return context.getInteractionResponder().viewErrorResponse({
-				viewId: actionId,
-				errors: error,
-			});
+		} else {
+			console.log('room does not exist');
 		}
-
 		return context.getInteractionResponder().successResponse();
 	}
-
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import {IHttp,
 	IModify,
 	IPersistence,
@@ -9,6 +10,9 @@ import { getTeamID } from '../sdk/subscription.sdk';
 import { getAccessTokenForUser } from '../storage/users';
 import { IProjectsResponse } from '../definition';
 import { events } from '../enums/enums';
+import { sendMessage } from '../lib/messages';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 
 type file = {
     key: string;
@@ -16,17 +20,16 @@ type file = {
     thumbnail_url: string;
     last_modified: Date;
 };
-type project = {
-    name: string;
-    files: file[];
-};
+
 export class BlockActionHandler {
 	constructor(
         private readonly app: FigmaApp,
         private readonly read: IRead,
         private readonly http: IHttp,
         private readonly modify: IModify,
-        private readonly persistence: IPersistence
+        private readonly persistence: IPersistence,
+        private readonly user: IUser,
+        private readonly room: IRoom,
 	) {}
 
 	public async run(
@@ -46,8 +49,7 @@ export class BlockActionHandler {
 		const teamId: string = getTeamID(team_url);
 
 		if (teamId.length < 0) {
-			console.log('team id not found 🔴');
-			return;
+			return sendMessage(this.modify, this.room, this.user, 'Team Id Not Available');
 		}
 
 		switch (resource_type) {
@@ -61,14 +63,11 @@ export class BlockActionHandler {
 					const projectIds: string[] | undefined =
                             res.data.projects.map((project) => project.id);
 					const files: file[] | undefined = [];
-					console.log('project ids - ', projectIds);
-
 					if (projectIds) {
 						const reqUrls = projectIds.map(
 							(projectId) =>
 								`https://api.figma.com/v1/projects/${projectId}/files`
 						);
-						console.log('reqUrls - ', reqUrls);
 
 						try {
 							await Promise.all(
@@ -79,10 +78,7 @@ export class BlockActionHandler {
 								)
 							)
 								.then((project_data) => {
-									console.log(
-										'files response4 - ',
-										project_data
-									);
+
 									// todo: do it this way add two input block one for project and one for file and when someone selects a project display the files below it based on the selected project.
 									project_data.forEach((project) => {
 										project.data.files.forEach(
@@ -91,14 +87,13 @@ export class BlockActionHandler {
 											}
 										);
 									});
-									console.log('files array - ', files);
 								})
-								.catch((err) => {
-									console.log('err - ', err);
+								.catch(() => {
+									sendMessage(this.modify, this.room, this.user, 'Something went wrong while fetching files. Please report the issue.');
 								});
 
 						} catch (e) {
-							console.log('error - ', e);
+							sendMessage(this.modify, this.room, this.user, 'Something went wrong while fetching files. Please report the issue.');
 						}
 					}
 
@@ -132,11 +127,9 @@ export class BlockActionHandler {
 						blockId: 'selectedFiles'
 					});
 				});
-
 			break;
 		case 'team':
 			// Team is selected
-			console.log('inside team block');
 			block.addSectionBlock({
 				text: {
 					text: 'Select the Team Events you want to receive notifications for. Users in this channel will only be notify for all the files that are in the project and have edit access, or are in view-only projects.',
@@ -147,13 +140,11 @@ export class BlockActionHandler {
 			break;
 		case 'project':
 			// Project is selected
-			console.log('project is selected');
 			await this.http
 				.get(`https://api.figma.com/v1/teams/${teamId}/projects`, {
 					headers
 				})
 				.then((res) => {
-					console.log('inside projects block');
 					block.addSectionBlock({
 						text: {
 							text: 'Select the Project to receive notification 🔔. Users in this channel will only be notify for all the files that are in the project and have edit access, or are in view-only projects.',
@@ -193,12 +184,12 @@ export class BlockActionHandler {
 						blockId: 'selectedProjects'
 					});
 				})
-				.catch((err) => {
-					console.log('error while connecting to figma -', err);
+				.catch(() => {
+					return sendMessage(this.modify, this.room, this.user, 'Something went wrong while fetching files. Please report the issue.');
 				});
 			break;
 		default:
-			console.log('no option selected');
+			return sendMessage(this.modify, this.room, this.user, 'No option was selected.');
 			break;
 		}
 
@@ -262,7 +253,6 @@ export class BlockActionHandler {
 		});
 
 		block.addDividerBlock();
-        console.log('-2');
 		const response = context
 			.getInteractionResponder()
 			.updateModalViewResponse({

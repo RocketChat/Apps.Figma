@@ -67,11 +67,14 @@ export async function sendMessage(
 
 	return modify.getCreator().finish(msg);
 }
-
-export async function appUserSendMessage(
+/**
+ *
+ * figma bot will message all the users inside the channel
+ */
+export async function botMessageChannel(
 	read: IRead,
 	modify: IModify,
-	room: IRoom,
+    room: IRoom,
 	blocks?: BlockBuilder | [IBlock]
 ): Promise<string> {
 	const appUser = await read.getUserReader().getAppUser();
@@ -81,7 +84,7 @@ export async function appUserSendMessage(
 		.setSender(appUser)
 		.setRoom(room)
 		.setGroupable(false)
-		.setParseUrls(false);
+		.setParseUrls(false)
 	if (blocks !== undefined) {
 		msg.setBlocks(blocks);
 	}
@@ -107,9 +110,9 @@ export async function shouldSendMessage(
 
 /**
  *
- * Sends notification to the user which is only visible to user.
+ * Figma.bot sends notification inside the current room to the current user
  */
-export async function sendNotificationToUsers(
+export async function botNotifyCurrentUser(
  	read: IRead,
  	modify: IModify,
  	user: IUser,

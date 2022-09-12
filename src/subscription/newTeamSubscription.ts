@@ -1,23 +1,28 @@
-import { IHttp } from '@rocket.chat/apps-engine/definition/accessors';
+/* eslint-disable no-mixed-spaces-and-tabs */
+import { IHttp, IHttpResponse, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { Subscription } from '../sdk/webhooks.sdk';
 import { getAccessTokenForUser } from '../storage/users';
-
+import { file } from '../definition';
+import { botMessageChannel, sendMessage } from '../lib/messages';
+import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 export async function newTeamSubscription(
-	persistence,
-	read,
+	modify: IModify,
+	persistence: IPersistence,
+	read: IRead,
 	http: IHttp,
 	room: IRoom,
 	accessToken,
 	team_id,
-	event,
+	event: string[],
 	current_event_on_loop,
-	user: IUser
+	user: IUser,
+	response: IHttpResponse
 ) {
 	console.log('2');
-	let projects_to_be_stored: string[] | undefined;
-	let files_to_be_stored: string[] | undefined;
+	let projects_to_be_stored: string[];
+	let files_to_be_stored: string[];
 
 	const subscriptionStorage = new Subscription(
 		persistence,
@@ -39,78 +44,88 @@ export async function newTeamSubscription(
 			headers: {
 				Authorization: `Bearer ${accessToken?.token}`
 			}
-		}).then(async (response) => {
-			projects_to_be_stored = response.data.projects.map(
-				(project) => project.id
-			);
-			// files to be stored
-
-			const reqUrls = response.data.projects.map(
-				(projectId) =>
-					`https://api.figma.com/v1/projects/${projectId}/files`
-			);
-
-			console.log('3 - reqUrls - ', reqUrls);
-
-			try {
-				await Promise.all(
-					reqUrls.map((url) =>
-						this.http.get(url, {
-							headers
-						})
-					)
-				).then((responses) => {
-					console.log(
-						'4 - files response - ',
-						responses
-					);
-
-					responses.forEach((response) => {
-						response.data.files.forEach(
-							(file: string) => {
-								files_to_be_stored!.push(file);
-							}
-						);
-					});
-					console.log('5 -files array - ', files_to_be_stored);
-				}).catch((err) => {
-					console.log('2 - err getting all files in team subscription - ', err);
-				});
-
-			} catch (e) {
-				console.log('error - ', e);
-			}
-
-			if (event === current_event_on_loop) {
-				console.log('6 - user passed event = loop event -> storing - ', projects_to_be_stored, files_to_be_stored);
-				return await subscriptionStorage.storeSubscription(
-					room,
-					user,
-					team_id,
-					projects_to_be_stored,
-					files_to_be_stored,
-					event
+		}).then(async (team_response) => {
+			if (event.includes(current_event_on_loop)) {
+				projects_to_be_stored = team_response.data.projects.map(
+					(project: any) => project.id
 				);
-			} else {
-				console.log('2 - user passed event != loop event -> storing - ', projects_to_be_stored, files_to_be_stored, event);
-				return await subscriptionStorage.storeSubscriptionByEvent(
-					'subscription',
-					response.data.id,
-					team_id,
-					room,
-					user,
-					event,
-					projects_to_be_stored,
-					files_to_be_stored
-				);}
-		}).catch((err) =>
-			console.log(
-				'error while getting all the projects for this team in the given event - ',
-				err
-			)
-		);
+				files_to_be_stored = [];
+				const reqUrls = team_response.data.projects.map((project) => `https://api.figma.com/v1/projects/${project.id}/files`);
+				try {
+					await Promise.all(
+						reqUrls.map((url) => http.get(url, {
+							headers
+						})))
+						.then((project_response) => {
+							project_response.forEach((response) => response.data.files.forEach((file: file) => files_to_be_stored.push(file.key)));
+						})
+						.catch(async () => {
 
+							const block = this.modify.getCreator().getBlockBuilder();
+							block.addSectionBlock({
+								text: {
+									text: 'Error in fetching Files. Please Report this issue',
+									type: TextObjectType.PLAINTEXT,
+								},
+							});
+							return await botMessageChannel(this.read, this.modify, room, block);
+						});
+
+				} catch (e) {
+
+					const block = this.modify.getCreator().getBlockBuilder();
+					block.addSectionBlock({
+						text: {
+							text: 'Error in fetching Files. Please Report this issue',
+							type: TextObjectType.PLAINTEXT,
+						},
+					});
+					return await botMessageChannel(this.read, this.modify, room, block);
+				}
+				 return await subscriptionStorage.storeSubscriptionByEvent(
+					'subscription',
+				 	response.data.id,
+				 	team_id,
+				 	room,
+				 	user,
+				 	current_event_on_loop,
+				 	projects_to_be_stored,
+				 	files_to_be_stored
+				 );
+			} else {
+				 return await subscriptionStorage.storeSubscriptionByEvent(
+				 	'subscription',
+				 	response.data.id,
+				 	team_id,
+				 	room,
+				 	user,
+				 	current_event_on_loop,
+				 	projects_to_be_stored,
+				 	files_to_be_stored
+				 );
+			}
+		}).catch(async () => {
+
+			const block = this.modify.getCreator().getBlockBuilder();
+			block.addSectionBlock({
+				text: {
+					text: 'Error in fetching Projects. Please Report this issue',
+					type: TextObjectType.PLAINTEXT,
+				},
+			});
+			return await botMessageChannel(this.read, this.modify, room, block);
+
+		});
 	} catch (error) {
-		console.log('error while getting all the projects for this team in the given event - ', error);
-	}
+
+		const block = this.modify.getCreator().getBlockBuilder();
+		block.addSectionBlock({
+			text: {
+				text: 'Error in fetching Projects. Please Report this issue',
+				type: TextObjectType.PLAINTEXT,
+			},
+		});
+		return await botMessageChannel(this.read, this.modify, room, block);
+    }
+	return;
 }

@@ -7,6 +7,7 @@ import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { ISubscription, storedRoomData } from '../definition';
 import { events } from '../enums/enums';
+import { sendMessage } from '../lib/messages';
 
 export class Subscription {
     [x: string]: any;
@@ -86,7 +87,7 @@ export class Subscription {
     			file_Ids: files_id
     		}
     	];
-    	console.log('room data stored is - ', room_data);
+    	console.log('6 - room data stored (🎃) - ', room_data);
     	try {
     		const associations: RocketChatAssociationRecord[] = [
     			new RocketChatAssociationRecord(
@@ -122,10 +123,6 @@ export class Subscription {
     		const recordId = await this.persistence.createWithAssociations(
     			subscriptionRecord,
     			associations
-    		);
-    		console.log(
-    			'[4] - Stored subscription record ✅',
-    			subscriptionRecord.event_name
     		);
     		return recordId;
     	} catch (error) {
@@ -286,7 +283,7 @@ export class Subscription {
     public async deleteAllTeamSubscriptions(
     	team_id: string
     ): Promise<object[]> {
-        console.log('team id - ', team_id);
+    	console.log('team id - ', team_id);
     	try {
     		const associations: RocketChatAssociationRecord[] = [
     			new RocketChatAssociationRecord(

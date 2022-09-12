@@ -6,7 +6,7 @@ import { Subscription } from '../sdk/webhooks.sdk';
 export async function newFileSubscription(
 	read: IRead,
 	persistence: IPersistence,
-	useSentEvent,
+	useSentEvent: string[],
 	file_Ids,
 	response,
 	team_id,
@@ -21,10 +21,8 @@ export async function newFileSubscription(
 		persistence,
 		read.getPersistenceReader(),
 	);
-
-	if (useSentEvent === event) {
+	if (useSentEvent.includes(event)) {
 		files_to_be_stored = file_Ids;
-		console.log('📁 subscription for file called | file to be stored -',files_to_be_stored,'- in event - ', event);
 		return await subscriptionStorage.storeSubscriptionByEvent(
 			'subscription',
 			response.data.id,
@@ -37,7 +35,6 @@ export async function newFileSubscription(
 		);
 
 	} else {
-		console.log('this event is not passed by user - ', event);
 		return await subscriptionStorage.storeSubscriptionByEvent(
 			'subscription',
 			response.data.id,
@@ -49,6 +46,4 @@ export async function newFileSubscription(
 			files_to_be_stored,
 		);
 	}
-
-	return;
 }

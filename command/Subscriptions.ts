@@ -1,7 +1,7 @@
 import { SlashCommandContext } from '@rocket.chat/apps-engine/definition/slashcommands';
 import {  IRead,  IModify, IHttp, IPersistence} from '@rocket.chat/apps-engine/definition/accessors';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
-import { sendDMToUser, sendMessage, sendNotificationToUsers } from '../src/lib/messages';
+import { sendDMToUser, sendMessage, botNotifyCurrentUser } from '../src/lib/messages';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { IButton } from '../src/lib/block';
