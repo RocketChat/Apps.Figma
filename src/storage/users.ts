@@ -1,3 +1,4 @@
+
 import {IPersistence,
 	IRead,} from '@rocket.chat/apps-engine/definition/accessors';
 import {RocketChatAssociationModel,
@@ -94,4 +95,3 @@ export async function getAccessTokenForUser(
 	>;
 
 	return result;
-}
