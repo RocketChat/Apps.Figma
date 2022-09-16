@@ -1,90 +1,56 @@
-import {IHttp} from '@rocket.chat/apps-engine/definition/accessors';
+import {
+    IHttp,
+    IHttpResponse,
+    IRead
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
+import { getAccessTokenForUser } from '../storage/users';
 
-const BaseHost = 'https://figmab.com/';
-const BaseApiHost = 'https://api.figma.com/v2/';
+type headers = { Authorization: string };
 
-async function postRequest(
-	http: IHttp,
-	accessToken: string,
-	url: string,
-	data: any,
-): Promise<any> {
-	const response = await http.post(url, {
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			'Content-Type': 'application/json',
-			'User-Agent': 'Rocket.Chat-Apps-Engine',
-		},
-		data,
-	});
-	// If it isn't a 2xx code, something wrong happened
-	if (!response.statusCode.toString().startsWith('2')) {
-		throw response;
-	}
+async function getHeaders(
+    read: IRead,
+    context: UIKitViewSubmitInteractionContext
+): Promise<headers> {
+    const token = await getAccessTokenForUser(
+        read,
+        context.getInteractionData().user
+    );
 
-	return JSON.parse(response.content || '{}');
+    const headers: { Authorization: string } = {
+        Authorization: `Bearer ${token?.token}`
+    };
+
+    return headers;
 }
 
-{
-	/*
-Async function deleteRequest(
+export async function getRequest(
+    read: IRead,
+    context: UIKitViewSubmitInteractionContext,
     http: IHttp,
-    accessToken: String,
     url: string
-): Promise<any> {
-    const response = await http.del(url, {
-        headers: {
-            Authorization: `token ${accessToken}`,
-            "Content-Type": "application/json",
-            "User-Agent": "Rocket.Chat-Apps-Engine",
-        },
-    });
-
-    // If it isn't a 2xx code, something wrong happened
-    if (!response.statusCode.toString().startsWith("2")) {
-        throw response;
-    }
-
-    return JSON.parse(response.content || "{}");
+): Promise<IHttpResponse> {
+    const headers = await getHeaders(read, context);
+    return await http
+        .get(url, {
+            headers
+        })
+        .then((r: IHttpResponse) => r)
+        .catch((e: IHttpResponse) => e);
 }
-*/
+export async function postRequest(
+    read: IRead,
+    context: UIKitViewSubmitInteractionContext,
+    http: IHttp,
+    url: string,
+    data: any // todo: remove this any and add a strict type 🐞
+): Promise<IHttpResponse> {
+    const headers = await getHeaders(read, context);
+    return await http
+        .post(url, {
+            headers,
+            data
+        })
+        .then((r: IHttpResponse) => r)
+        .catch((e: IHttpResponse) => e);
 }
-
-async function patchRequest(
-	http: IHttp,
-	accessToken: string,
-	url: string,
-	data: any,
-): Promise<any> {
-	const response = await http.patch(url, {
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			'Content-Type': 'application/json',
-			'User-Agent': 'Rocket.Chat-Apps-Engine',
-		},
-		data,
-	});
-
-	// If it isn't a 2xx code, something wrong happened
-	if (!response.statusCode.toString().startsWith('2')) {
-		throw response;
-	}
-
-	return JSON.parse(response.content || '{}');
-}
-
-export async function createSubscription(
-	http: IHttp,
-	team_id: string,
-	webhookUrl: string,
-	access_token: string,
-	event_type: string[],
-) {
-	return postRequest(http, access_token, BaseApiHost + '/webhooks', {
-		event_type,
-		team_id,
-		endpoint: webhookUrl,
-		passcode: '123456789',
-	});
-}
-

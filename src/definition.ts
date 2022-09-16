@@ -1,13 +1,35 @@
 import { IUIKitBlockIncomingInteraction } from '@rocket.chat/apps-engine/definition/uikit/UIKitIncomingInteractionTypes';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
-import { events } from './enums/enums';
+import { modalId, modalTitle } from './enums/enums';
 
+export type view = {
+    type: string;
+    id: modalId.SUBSCRIPTION_VIEW;
+    title: {
+        type: string;
+        text: modalTitle.NOTIFICATION_MODAL;
+        emoji: false;
+    };
+    close: {
+        type: string;
+        text: { type: string; text: string };
+        actionId: string;
+    };
+    submit: {
+        type: string;
+        actionId: modalId;
+        text: { type: string; text: string };
+    };
+    blocks: object[];
+    showIcon: boolean;
+    state: IState;
+};
 export type IFigmaUserData = {
     id: string;
     email: string;
     handle: string;
     img_url: string;
-}
+};
 
 export type file = {
     key: string;
@@ -15,18 +37,20 @@ export type file = {
     thumbnail_url: string;
     last_modified: Date;
 };
+
+export type storedRoom = {
+    roomId: string;
+};
 export interface NewIUser extends IUser {
     figmaUserId?: string;
 }
 export type IState = {
-    state: {
-        resource_type: {
-            type: string;
-            [option: string]: string;
-        };
-        team_url: {
-            url: string;
-        };
+    resource_block: {
+        type: string;
+        [option: string]: string;
+    };
+    team_url: {
+        url: string;
     };
 };
 export type IModalContext = {
