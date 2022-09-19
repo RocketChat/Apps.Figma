@@ -27,11 +27,11 @@ export async function commentEvent(
                     commentedBy = users.find(
                         (user) => user.figmaUserId === payload.triggered_by.id
                     );
-                    console.log(commentedBy);
+                    commentedBy;
                 })
                 .catch((e) =>
                     console.log(
-                        'error finding user in db mentioned in comment - ',
+                        'error: finding user in db mentioned in comment - ',
                         e
                     )
                 );
@@ -65,18 +65,23 @@ export async function commentEvent(
                                 fileKey: payload.file_key
                             }
                         }),
-                        block.newButtonElement({
-                            actionId: blockAction.REACT,
-                            text: block.newPlainTextObject('Add Reaction'),
-                            value: {
-                                commentId: payload.comment_id,
-                                fileKey: payload.file_key
-                            }
-                        }),
+                        // block.newButtonElement({
+                        //     actionId: blockAction.REACT,
+                        //     text: block.newPlainTextObject('Add Reaction'),
+                        //     value: {
+                        //         commentId: payload.comment_id,
+                        //         fileKey: payload.file_key
+                        //     }
+                        // }),
                         block.newButtonElement({
                             actionId: blockAction.OPEN_FILE,
                             text: block.newPlainTextObject('Open file'),
-                            value: 'open'
+                            url: `https://www.figma.com/file/${payload.file_key}`,
+                            value: {
+                                fileKey: payload.file_key,
+                                commentId: payload.comment_id,
+                                fileURL: `https://www.figma.com/file/${payload.file_key}`
+                            }
                         })
                     ]
                 });
@@ -119,7 +124,7 @@ export async function commentEvent(
                             );
                         }
                     } else {
-                        console.log('mention does not exist');
+                        console.log('result: mention does not exist');
                     }
                 });
 
@@ -130,7 +135,6 @@ export async function commentEvent(
             (!roomData.file_Ids || roomData.file_Ids.length == 0) &&
             (roomData.project_Ids || roomData.project_Ids!.length > 0)
         ) {
-            console.log('roomData has projects init - ', roomData);
             // files does not exist this means that there are projects in the room then if the project is present send the message to the room
             // for project we will have to store all the files we are getting from that project and then check if the file is present in the files array
             if (roomData.file_Ids?.includes(payload.file_key)) {
@@ -159,28 +163,36 @@ export async function commentEvent(
                                 fileKey: payload.file_key
                             }
                         }),
-                        block.newButtonElement({
-                            actionId: blockAction.REACT,
-                            text: block.newPlainTextObject('Add Reaction 👍🏻'),
-                            value: {
-                                commentId: payload.comment_id,
-                                fileKey: payload.file_key
-                            }
-                        }),
+                        // block.newButtonElement({
+                        //     actionId: blockAction.REACT,
+                        //     text: block.newPlainTextObject('Add Reaction'),
+                        //     value: {
+                        //         commentId: payload.comment_id,
+                        //         fileKey: payload.file_key
+                        //     }
+                        // }),
                         block.newButtonElement({
                             actionId: blockAction.OPEN_FILE,
                             text: block.newPlainTextObject('Open file'),
-                            value: 'open'
+                            url: `https://www.figma.com/file/${payload.file_key}`,
+                            value: {
+                                fileKey: payload.file_key,
+                                commentId: payload.comment_id,
+                                fileURL: `https://www.figma.com/file/${payload.file_key}`
+                            }
                         })
                     ]
                 });
                 await botMessageChannel(read, modify, room, block);
             }
         } else if (!roomData.file_Ids && !roomData.project_Ids) {
-            console.log('roomData has no files or projects init - ', roomData);
+            console.log(
+                'error: roomData has no files or projects init - ',
+                roomData
+            );
             // both project ids and file ids array are undefined which means subscription is for the whole team
         }
     } else {
-        console.log('Figma pinged but room not found - ', roomData);
+        console.log('result: figma pinged but room not found - ', roomData);
     }
 }

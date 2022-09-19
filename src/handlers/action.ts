@@ -14,7 +14,7 @@ import { FigmaApp } from '../../FigmaApp';
 import { getTeamID } from '../sdk/subscription.sdk';
 import { getAccessTokenForUser } from '../storage/users';
 import { IProjectsResponse } from '../definition';
-import { events, modalId } from '../enums/enums';
+import { events, modalId, modalTitle } from '../enums/enums';
 import { botNotifyCurrentUser, sendMessage } from '../lib/messages';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
@@ -40,7 +40,7 @@ export class BlockActionHandler {
         context: UIKitViewSubmitInteractionContext,
         team_url: string,
         resource_type: string
-    ): Promise<{ success: boolean } | IUIKitModalResponse> {
+    ) {
         const block = this.modify.getCreator().getBlockBuilder();
         const token = await getAccessTokenForUser(
             this.read,
@@ -74,14 +74,14 @@ export class BlockActionHandler {
                 )
                     .then(async (res: IHttpResponse) => {
                         if (!res) {
-                            await botNotifyCurrentUser(
+                            return await botNotifyCurrentUser(
                                 this.read,
                                 this.modify,
                                 this.user,
                                 this.room,
                                 'Error connecting with figma server. Please try again after some time. Check logs if it still does not work report the issue'
                             );
-                            return { success: false };
+                            //return { success: false };
                         }
                         const projectIds: string[] | undefined =
                             res.data.projects.map(
@@ -114,28 +114,22 @@ export class BlockActionHandler {
                                         });
                                     })
                                     .catch(async () => {
-                                        await botNotifyCurrentUser(
+                                        return await botNotifyCurrentUser(
                                             this.read,
                                             this.modify,
                                             this.user,
                                             this.room,
                                             'Something went wrong while fetching files. Please report the issue.'
                                         );
-                                        return {
-                                            success: false
-                                        };
                                     });
                             } catch (e) {
-                                await botNotifyCurrentUser(
+                                return await botNotifyCurrentUser(
                                     this.read,
                                     this.modify,
                                     this.user,
                                     this.room,
                                     'Something went wrong while fetching files. Please report the issue.'
                                 );
-                                return {
-                                    success: false
-                                };
                             }
                         }
 
@@ -181,98 +175,9 @@ export class BlockActionHandler {
                             element: selectFiles,
                             blockId: 'selectedFiles'
                         });
-                        const newMultiStaticElement =
-                            block.newMultiStaticElement({
-                                actionId: 'events',
-                                options: [
-                                    {
-                                        value: events.COMMENT,
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'New Comments',
-                                            emoji: true
-                                        }
-                                    },
-                                    {
-                                        value: events.UPDATE,
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'File Updates',
-                                            emoji: true
-                                        }
-                                    },
-                                    {
-                                        value: events.VERSION_UPDATE,
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'File Version Updates',
-                                            emoji: true
-                                        }
-                                    },
-                                    {
-                                        value: events.DELETE,
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'File Delete',
-                                            emoji: true
-                                        }
-                                    },
-                                    {
-                                        value: events.LIBRARY_PUBLISHED,
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'Library Publish',
-                                            emoji: true
-                                        }
-                                    }
-                                ],
-                                placeholder: {
-                                    type: TextObjectType.PLAINTEXT,
-                                    text: 'Select Events'
-                                }
-                            });
-
-                        block.addInputBlock({
-                            label: {
-                                text: 'Select Events',
-                                type: TextObjectType.PLAINTEXT
-                            },
-                            element: newMultiStaticElement,
-                            blockId: 'selectedEvents'
-                        });
-
-                        const resource_type_Capital =
-                            resource_type.charAt(0).toUpperCase() +
-                            resource_type.slice(1);
-
-                        // get the modal and update its view
-                        const response = context
-                            .getInteractionResponder()
-                            .updateModalViewResponse({
-                                id: modalId.SUBSCRIPTION_VIEW,
-                                title: block.newPlainTextObject(
-                                    `Select ${resource_type_Capital} Event Types`
-                                ),
-                                close: block.newButtonElement({
-                                    text: {
-                                        type: TextObjectType.PLAINTEXT,
-                                        text: 'Cancel'
-                                    }
-                                }),
-                                submit: block.newButtonElement({
-                                    actionId: 'secondModal',
-                                    text: {
-                                        type: TextObjectType.PLAINTEXT,
-                                        text: 'Submit'
-                                    }
-                                }),
-
-                                blocks: block.getBlocks()
-                            });
-                        return response;
                     })
                     .catch(async () => {
-                        await botNotifyCurrentUser(
+                        return await botNotifyCurrentUser(
                             this.read,
                             this.modify,
                             this.user,
@@ -299,14 +204,13 @@ export class BlockActionHandler {
                 )
                     .then(async (res) => {
                         if (!res) {
-                            await botNotifyCurrentUser(
+                            return await botNotifyCurrentUser(
                                 this.read,
                                 this.modify,
                                 this.user,
                                 this.room,
                                 'Error connecting with figma server. Please try again after some time. Check logs if it still does not work report the issue'
                             );
-                            return { success: false };
                         } else {
                             block.addSectionBlock({
                                 text: {
@@ -346,95 +250,6 @@ export class BlockActionHandler {
                                 element: selectProject,
                                 blockId: 'selectedProjects'
                             });
-                            const newMultiStaticElement =
-                                block.newMultiStaticElement({
-                                    actionId: 'events',
-                                    options: [
-                                        {
-                                            value: events.COMMENT,
-                                            text: {
-                                                type: TextObjectType.PLAINTEXT,
-                                                text: 'New Comments',
-                                                emoji: true
-                                            }
-                                        },
-                                        {
-                                            value: events.UPDATE,
-                                            text: {
-                                                type: TextObjectType.PLAINTEXT,
-                                                text: 'File Updates',
-                                                emoji: true
-                                            }
-                                        },
-                                        {
-                                            value: events.VERSION_UPDATE,
-                                            text: {
-                                                type: TextObjectType.PLAINTEXT,
-                                                text: 'File Version Updates',
-                                                emoji: true
-                                            }
-                                        },
-                                        {
-                                            value: events.DELETE,
-                                            text: {
-                                                type: TextObjectType.PLAINTEXT,
-                                                text: 'File Delete',
-                                                emoji: true
-                                            }
-                                        },
-                                        {
-                                            value: events.LIBRARY_PUBLISHED,
-                                            text: {
-                                                type: TextObjectType.PLAINTEXT,
-                                                text: 'Library Publish',
-                                                emoji: true
-                                            }
-                                        }
-                                    ],
-                                    placeholder: {
-                                        type: TextObjectType.PLAINTEXT,
-                                        text: 'Select Events'
-                                    }
-                                });
-
-                            block.addInputBlock({
-                                label: {
-                                    text: 'Select Events',
-                                    type: TextObjectType.PLAINTEXT
-                                },
-                                element: newMultiStaticElement,
-                                blockId: 'selectedEvents'
-                            });
-
-                            const resource_type_Capital =
-                                resource_type.charAt(0).toUpperCase() +
-                                resource_type.slice(1);
-
-                            // get the modal and update its view
-                            const response = context
-                                .getInteractionResponder()
-                                .updateModalViewResponse({
-                                    id: modalId.SUBSCRIPTION_VIEW,
-                                    title: block.newPlainTextObject(
-                                        `Select ${resource_type_Capital} Event Types`
-                                    ),
-                                    close: block.newButtonElement({
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'Cancel'
-                                        }
-                                    }),
-                                    submit: block.newButtonElement({
-                                        actionId: 'secondModal',
-                                        text: {
-                                            type: TextObjectType.PLAINTEXT,
-                                            text: 'Submit'
-                                        }
-                                    }),
-
-                                    blocks: block.getBlocks()
-                                });
-                            return response;
                         }
                     })
                     .catch(async () => {
@@ -449,7 +264,6 @@ export class BlockActionHandler {
                     });
                 break;
             default:
-                console.log('default');
                 return { success: false };
         }
 
@@ -520,9 +334,7 @@ export class BlockActionHandler {
             .getInteractionResponder()
             .updateModalViewResponse({
                 id: modalId.SUBSCRIPTION_VIEW,
-                title: block.newPlainTextObject(
-                    `Select ${resource_type_Capital} Event Types`
-                ),
+                title: block.newPlainTextObject(modalTitle.EVENT_MODAL),
                 close: block.newButtonElement({
                     text: {
                         type: TextObjectType.PLAINTEXT,
@@ -530,7 +342,7 @@ export class BlockActionHandler {
                     }
                 }),
                 submit: block.newButtonElement({
-                    actionId: 'secondModal',
+                    actionId: modalId.EVENT_MODAL_VIEW,
                     text: {
                         type: TextObjectType.PLAINTEXT,
                         text: 'Submit'

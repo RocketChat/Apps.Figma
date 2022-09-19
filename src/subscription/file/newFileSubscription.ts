@@ -19,7 +19,7 @@ export async function newFileSubscription(
     room: IRoom,
     event: events
 ) {
-    console.log('2 - inside new files subscription');
+    // 2 - inside new files subscription
     let projects_to_be_stored: string[] | undefined;
     let files_to_be_stored: string[] | undefined;
 
@@ -28,9 +28,7 @@ export async function newFileSubscription(
         read.getPersistenceReader()
     );
     if (useSentEvent.includes(event)) {
-        console.log(
-            '3, 4 - for files there are not much complicated steps ( this step should occur exactly 5 times )'
-        );
+        // 3, 4 - for files there are not much complicated steps ( this step should occur exactly 5 times
         files_to_be_stored = file_Ids;
         return await subscriptionStorage.storeSubscriptionByEvent(
             'subscription',
@@ -43,9 +41,7 @@ export async function newFileSubscription(
             files_to_be_stored
         );
     } else {
-        console.log(
-            '3, 4 - for files there are not much complicated steps ( this step should occur exactly 5 times )'
-        );
+        // 3, 4 - for files there are not much complicated steps ( this step should occur exactly 5 times 
 
         return await subscriptionStorage.storeSubscriptionByEvent(
             'subscription',

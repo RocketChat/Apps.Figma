@@ -28,7 +28,7 @@ export async function newTeamSubscription(
     current_event_on_loop: events,
     response: IHttpResponse
 ) {
-    console.log('2 - inside team subscription');
+    // 2 - inside team subscription');
     let projects_to_be_stored: string[];
     let files_to_be_stored: string[];
 
@@ -45,7 +45,7 @@ export async function newTeamSubscription(
             `https://api.figma.com/v1/teams/${team_id}/projects`
         )
             .then(async (team_response) => {
-                console.log('3 - got the project from figma');
+                // 3 - got the project from figma');
                 if (event.includes(current_event_on_loop)) {
                     projects_to_be_stored = team_response.data.projects.map(
                         (project: any) => project.id // todo: fix this and add a strict type
@@ -63,9 +63,7 @@ export async function newTeamSubscription(
                             )
                         )
                             .then((project_response) => {
-                                console.log(
-                                    '4 - got all the files from the project this will repeat multiple times'
-                                );
+                               // 4 - got all the files from the project this will repeat multiple times' 
                                 project_response.forEach((response) =>
                                     response.data.files.forEach((file: file) =>
                                         files_to_be_stored.push(file.key)

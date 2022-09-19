@@ -12,6 +12,7 @@ import {
     TextObjectType,
     UIKitBlockInteractionContext
 } from '@rocket.chat/apps-engine/definition/uikit';
+import { modalId, modalTitle } from '../enums/enums';
 
 export async function newComment(
     modify: IModify,
@@ -43,14 +44,12 @@ export async function newComment(
     });
 
     let commentData: any;
-    console.log('data - ', context.getInteractionData().message?.blocks);
     // for the opened block run the code
     context.getInteractionData().message?.blocks?.forEach((block: any) => {
         if (block) {
             if (block.type === 'actions') {
                 block?.elements.forEach((element) => {
                     // check if the element is active or not
-                    console.log(element);
                     if (element.type === 'active') {
                         console.log('element is active');
                     } else {
@@ -68,7 +67,7 @@ export async function newComment(
 
     const modal = {
         id: 'commentView',
-        title: block.newPlainTextObject('Create a new Comment'),
+        title: block.newPlainTextObject(modalTitle.CREATE_COMMENT_MODAL),
         submit: block.newButtonElement({
             actionId: 'createNewComment',
             text: {

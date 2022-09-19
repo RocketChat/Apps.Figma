@@ -10,7 +10,7 @@ import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { blockAction } from '../../enums/enums';
 
-export async function figmaSubscribedCommand(
+export async function figmaListCommand(
     context: SlashCommandContext,
     read: IRead,
     modify: IModify,
@@ -44,11 +44,6 @@ export async function figmaSubscribedCommand(
                 text: block.newPlainTextObject('Projects'),
                 value: 'projects'
             }),
-            block.newButtonElement({
-                actionId: blockAction.TEAMS,
-                text: block.newPlainTextObject('Team'),
-                value: 'team'
-            })
         ]
     });
     builder.setBlocks(block);

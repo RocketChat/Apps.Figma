@@ -58,6 +58,6 @@ export async function figmaSubscribeCommand(
             context.getSender()
         );
     } else {
-        console.log('Invalid Trigger ID !');
+        console.log('error: Invalid Trigger ID !');
     }
 }

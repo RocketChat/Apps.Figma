@@ -13,6 +13,7 @@ import { getFiles } from '../lib/getFiles';
 import { getInteractionRoomData } from '../storage/room';
 import { commentReply } from '../lib/commentReply';
 import { newComment } from '../lib/comment';
+import { getProjects } from '../lib/getProjects';
 
 export class BlockActionHandler {
     constructor(
@@ -47,7 +48,6 @@ export class BlockActionHandler {
                 try {
                     switch (actionId) {
                         case blockAction.FILES:
-                            console.log('📂 file');
                             await getFiles(
                                 modify,
                                 context,
@@ -62,12 +62,19 @@ export class BlockActionHandler {
                                 .getInteractionResponder()
                                 .successResponse();
                         case blockAction.PROJECTS:
-                            console.log('clicked on project');
-                            break;
-                        case blockAction.TEAMS:
-                            console.log('clicked on team');
+                            await getProjects(
+                                modify,
+                                context,
+                                persistence,
+                                read,
+                                data,
+                                room,
+                                user,
+                                http
+                            );
                             break;
                         case blockAction.REPLY:
+                            console.log('inside reply to comment');
                             await commentReply(
                                 modify,
                                 context,
@@ -79,14 +86,21 @@ export class BlockActionHandler {
                                 http
                             );
                             break;
-                        case blockAction.OPEN_FILE:
-                            console.log('open file');
-                            break;
                         case blockAction.REACT:
-                            console.log('reaction');
+                            console.log('result: reaction');
                             break;
                         case blockAction.POST:
-                            console.log('post');
+                            console.log('inside post reply');
+                            await commentReply(
+                                modify,
+                                context,
+                                persistence,
+                                read,
+                                data,
+                                room,
+                                user,
+                                http
+                            );
                             break;
                         case blockAction.COMMENT:
                             await newComment(
@@ -104,14 +118,14 @@ export class BlockActionHandler {
                             break;
                     }
                 } catch (error) {
-                    console.log('error - ', error);
+                    console.log('error: ', error);
                     return context.getInteractionResponder().viewErrorResponse({
                         viewId: actionId,
                         errors: error
                     });
                 }
             } else {
-                console.log('room does not exist');
+                console.log('result: room does not exist');
             }
         }
         return context.getInteractionResponder().successResponse();

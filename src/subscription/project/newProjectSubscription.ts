@@ -30,7 +30,7 @@ export async function newProjectSubscription(
     user: IUser,
     response: IHttpRequest
 ) {
-    console.log('2 - creating a new projects subscription');
+   // 2 - creating a new projects subscription
     let projects_to_be_stored: string[] | undefined;
     let files_to_be_stored: string[] | undefined;
 
@@ -52,7 +52,7 @@ export async function newProjectSubscription(
                     `https://api.figma.com/v1/projects/${project_id}/files`
                 )
                     .then(async (response) => {
-                        console.log('3 - got the files from figma');
+                        // 3 - got the files from figma
                         const tempArr = response.data.files.map(
                             (file: file) => file.key
                         );

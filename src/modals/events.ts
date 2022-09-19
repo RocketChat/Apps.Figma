@@ -52,7 +52,7 @@ export async function eventModal({
             if (roomData) {
                 roomId = roomData.roomId;
             } else {
-                console.log('room id not found sorry');
+                console.log('error: room id not found sorry');
             }
         }
 

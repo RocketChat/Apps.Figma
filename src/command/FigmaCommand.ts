@@ -14,8 +14,9 @@ import { sendDMToUser, botNotifyCurrentUser } from '../lib/messages';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { figmaSubscribeCommand } from './commands/Subscribe';
 import { figmaConnectCommand } from './commands/Connect';
-import { figmaSubscribedCommand } from './commands/Subscriptions';
+import { figmaListCommand } from './commands/List';
 import { commands } from '../enums/enums';
+import { Subscription } from '../sdk/webhooks.sdk';
 
 export class FigmaCommand implements ISlashCommand {
     public command = commands.FIGMA;
@@ -33,6 +34,7 @@ export class FigmaCommand implements ISlashCommand {
         persistence: IPersistence
     ): Promise<void> {
         const [command] = context.getArguments();
+
         switch (command) {
             case commands.CONNECT:
                 await figmaConnectCommand(
@@ -64,7 +66,7 @@ export class FigmaCommand implements ISlashCommand {
 
                 break;
             case commands.LIST:
-                await figmaSubscribedCommand(
+                await figmaListCommand(
                     context,
                     read,
                     modify,
@@ -73,6 +75,9 @@ export class FigmaCommand implements ISlashCommand {
                     context.getRoom(),
                     context.getSender()
                 );
+                break;
+            case 'delete':
+                await this.figmaDeleteCommand(read, context, persistence);
                 break;
             default:
                 await this.figmaConfuseCommand(
@@ -83,6 +88,23 @@ export class FigmaCommand implements ISlashCommand {
                 );
                 break;
         }
+    }
+
+    public async figmaDeleteCommand(
+        read: IRead,
+        context: SlashCommandContext,
+        persistence: IPersistence
+    ) {
+        const subscriptionStorage = new Subscription(
+            persistence,
+            read.getPersistenceReader()
+        );
+
+        const team_id = context.getArguments()[1];
+
+        subscriptionStorage.deleteAllTeamSubscriptions(team_id).then((res) => {
+            console.log('result: deleted subscriptions ', res);
+        });
     }
 
     public async figmaHelpCommand(

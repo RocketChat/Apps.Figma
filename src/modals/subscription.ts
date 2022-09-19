@@ -37,7 +37,7 @@ export async function subscriptionsModal({
             if (room) {
                 roomId = room.id;
             } else {
-                console.log('room is not there');
+                console.log('error: room is not there');
             }
         }
     }

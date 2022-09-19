@@ -31,7 +31,7 @@ export async function commentReply(
 			actionId: 'reply',
 			placeholder: {
 				text: 'Reply...',
-				type: TextObjectType.PLAINTEXT,
+                type: TextObjectType.PLAINTEXT,
 			},
 			type: BlockElementType.PLAIN_TEXT_INPUT,
 		},
@@ -42,12 +42,11 @@ export async function commentReply(
     	if (block)
     	{
     		if (block.type === 'actions') {
-    			console.log('value should be an array ', block?.elements[1].value);
     			commentData = block?.elements[1].value;
 			}
 			//console.log('commentId', commentId);
     	} else {
-    		console.log('block is undefined - ', block);
+    		console.log('error: block is undefined - ', block);
     	}
     	return;
 	});

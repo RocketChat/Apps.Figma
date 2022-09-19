@@ -22,7 +22,6 @@ import { create as registerAuthorizedUser } from './src/storage/users';
 import { createOAuth2Client } from '@rocket.chat/apps-engine/definition/oauth2/OAuth2';
 import { FigmaCommand } from './src/command/FigmaCommand';
 import {
-    UIKitActionButtonInteractionContext,
     UIKitBlockInteractionContext,
     UIKitViewSubmitInteractionContext
 } from '@rocket.chat/apps-engine/definition/uikit';
@@ -36,7 +35,9 @@ import { AddSubscription } from './src/subscription/addSubscription';
 import { getRoom } from './src/storage/room';
 import { BlockActionHandler } from './src/handlers/BlockActionHandler';
 import { ExecuteReplyHandler } from './src/handlers/reply';
-import { modalId } from './src/enums/enums';
+import { modalTitle } from './src/enums/enums';
+import { CommentModalHandler } from './src/handlers/comment';
+
 export class FigmaApp extends App {
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
@@ -63,15 +64,18 @@ export class FigmaApp extends App {
         persistence: IPersistence,
         modify: IModify
     ) {
-        console.log(' view id - ', context.getInteractionData().view.id);
+        console.log(
+            'modal title - ',
+            context.getInteractionData().view.title.text
+        );
         const user: IUser = context.getInteractionData().user;
         const room = await getRoom(read, user);
         if (room) {
+            // we are using modal title to check different modals as for updated modal modal id will be same
             if (
-                context.getInteractionData().view.id ===
-                modalId.SUBSCRIPTION_VIEW
+                context.getInteractionData().view.title.text ===
+                modalTitle.NOTIFICATION_MODAL
             ) {
-                console.log('inside subscription view');
                 const handler = new ExecuteViewSubmitHandler(
                     this,
                     read,
@@ -82,13 +86,12 @@ export class FigmaApp extends App {
                 return await handler
                     .run(context, room)
                     .catch((err) =>
-                        console.log('error submitting 2nd modal', err)
+                        console.log('error: submitting 2nd modal', err)
                     );
             } else if (
-                context.getInteractionData().view.id ===
-                modalId.EVENT_MODAL_VIEW
+                context.getInteractionData().view.title.text ===
+                modalTitle.EVENT_MODAL
             ) {
-                console.log('submitting second modal');
                 const handler = new AddSubscription(
                     this,
                     read,
@@ -99,12 +102,13 @@ export class FigmaApp extends App {
                 return await handler
                     .run(context, room)
                     .catch((err) =>
-                        console.log('error submitting 2nd modal', err)
+                        console.log('error: submitting 2nd modal', err)
                     );
             } else if (
-                context.getInteractionData().view.id === modalId.REPLY_VIEW
+                context.getInteractionData().view.title.text ===
+                modalTitle.REPLY_MODAL
             ) {
-                console.log('inside reply to comment block');
+                console.log('inside reply modal');
                 const handler = new ExecuteReplyHandler(
                     this,
                     read,
@@ -113,16 +117,25 @@ export class FigmaApp extends App {
                     persistence
                 );
                 return await handler.run(context, room);
-            } else {
-                console.log(
-                    '❎❎❎❎❎❎',
-                    context.getInteractionData().view.title.text,
-                    '❎❎❎❎❎❎'
+            } else if (
+                context.getInteractionData().view.title.text ===
+                modalTitle.CREATE_COMMENT_MODAL
+            ) {
+                console.log('inside create comment modal');
+                const handler = new CommentModalHandler(
+                    this,
+                    read,
+                    http,
+                    modify,
+                    persistence
                 );
+                return await handler.run(context, room);
+            } else {
+                console.log('error: please check the modal title');
                 return context.getInteractionResponder().successResponse();
             }
         } else {
-            console.log('room does not exist');
+            console.log('error: room does not exist');
         }
         context.getInteractionResponder().successResponse();
     }
@@ -146,19 +159,9 @@ export class FigmaApp extends App {
                 'Modal View was closed'
             );
         } else {
-            console.log('message sending error - room not found');
+            console.log('error: room not found');
         }
         return context.getInteractionResponder().successResponse();
-    }
-
-    public async executeActionButtonHandler(
-        context: UIKitActionButtonInteractionContext,
-        read: IRead,
-        http: IHttp,
-        persistence: IPersistence,
-        modify: IModify
-    ) {
-        console.log('executeActionButtonHandler');
     }
 
     public async executeBlockActionHandler(

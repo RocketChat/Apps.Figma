@@ -21,9 +21,10 @@ enum blockAction {
 }
 
 enum modalTitle {
-    EVENT_MODAL = 'Select Event Types',
+    EVENT_MODAL = 'Event Types',
     NOTIFICATION_MODAL = 'Get Figma Notifications',
-    REPLY_MODAL = 'Reply to Comment'
+    REPLY_MODAL = 'Reply to Comment',
+    CREATE_COMMENT_MODAL = 'Create new Comment'
 }
 
 enum modalId {

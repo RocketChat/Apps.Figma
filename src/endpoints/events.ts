@@ -38,7 +38,7 @@ export async function commentEvent(
             })
             .catch((e) =>
                 console.log(
-                    'error finding user in db mentioned in comment - ',
+                    'error: finding user in db mentioned in comment - ',
                     e
                 )
             );

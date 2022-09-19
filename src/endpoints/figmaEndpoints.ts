@@ -39,7 +39,6 @@ export class figmaWebHooks extends ApiEndpoint {
         }
 
         if (payload.event_type === events.PING) {
-            //console.log('PING from figma - ', payload);
             // todo : send message to the user that a new connection was made successfully
             //await sendMessage(modify, room, user, 'New connection made successfully');
             return this.success();

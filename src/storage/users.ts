@@ -57,10 +57,9 @@ export async function create(
             ...user,
             figmaUserId: figmaUserId
         });
-        console.log('user was not present in db, adding to db');
         await persistence.updateByAssociation(assoc, users);
     } else {
-        console.log('user was already present in db');
+        console.log('error: user was already present in db');
     }
 }
 

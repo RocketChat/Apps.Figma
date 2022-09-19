@@ -20,7 +20,8 @@ import { IProjectModalData } from '../definition';
 import { events } from '../enums/enums';
 import { WebhookSubscription } from '../handlers/subscription/createSubscriptionHandler';
 import { updateSubscriptionHandler } from '../handlers/subscription/updateSubscriptionHandler';
-import { postRequest } from '../helpers/Figma.sdk';
+import { getRequest, postRequest } from '../helpers/Figma.sdk';
+
 export class AddSubscription {
     constructor(
         private readonly app: FigmaApp,
@@ -49,7 +50,6 @@ export class AddSubscription {
         const file_Ids: string[] | undefined = state?.selectedFiles?.files;
         const team_id = getTeamID(state?.team_url.url);
 
-        // Refer this fig jam file for the flow of this code https://www.figma.com/file/hufAYVAtxhcxv56WKM0jLi/Figma-App?node-id=7%3A308
         try {
             if (user.id) {
                 if (
@@ -82,263 +82,423 @@ export class AddSubscription {
                             this.persistence,
                             this.read.getPersistenceReader()
                         );
+
                         const createWebhookSubscription =
-                            await new WebhookSubscription(
+                            new WebhookSubscription(
                                 this.read,
                                 this.http,
                                 this.modify,
                                 this.persistence
                             );
-                        // subscriptionStorage
-                        // 	.getAllSubscriptions()
-                        // 	.then((r) => {
-                        // 		r.forEach((subscription) => {
-                        // 			 console.log(
-                        // 			 	'-1 - all subscriptions - ',
-                        // 				subscription.room_data,
-                        // 				subscription.event_name
-                        // 			 );
-                        // 		});
-                        // 	})
-                        // 	.catch((e) => {
-                        // 		console.log(
-                        // 			'Error in getting all subscriptions',
-                        // 			e
-                        // 		);
-                        // 	});
 
+                        let count = 0; // this counter we will use if if there are only 4 or less hooks left to create in figma we will notify the use that subscription was unsuccessful and delete some in figma
                         subscriptionStorage
-                            .deleteAllTeamSubscriptions(team_id)
-                            .then((res) => {
-                                console.log('deleted subscriptions - ', res);
+                            .getSubscriptionsByTeam(team_id)
+                            // this is for team we fetch all the details of that team to store them
+                            .then(async (subscriptions) => {
+                                // eslint-disable-next-line prefer-const
+                                let teamData: {
+                                    team_id: string;
+                                    projects: string[];
+                                    files: string[];
+                                } = {
+                                    team_id: team_id,
+                                    projects: [],
+                                    files: []
+                                };
+                                const files_in_team: string[] = [];
+                                const projects_in_team: string[] = [];
+                                if (!project_Ids?.length && !file_Ids?.length) {
+                                    await getRequest(
+                                        this.read,
+                                        context,
+                                        this.http,
+                                        `https://api.figma.com/v1/teams/${team_id}/projects`
+                                    )
+                                        .then(async (team_response) => {
+                                            //console.log('response from figma for projects - ', team_response);
+                                            const reqUrls =
+                                                team_response.data.projects.map(
+                                                    (project: any) => {
+                                                        console.log(project.id);
+                                                        projects_in_team.push(
+                                                            project.id
+                                                        );
+                                                        return `https://api.figma.com/v1/projects/${project.id}/files`;
+                                                    }
+                                                );
+                                            if (projects_in_team) {
+                                                try {
+                                                    await Promise.all(
+                                                        reqUrls.map(
+                                                            async (url) =>
+                                                                await getRequest(
+                                                                    this.read,
+                                                                    context,
+                                                                    this.http,
+                                                                    url
+                                                                )
+                                                        )
+                                                    )
+                                                        .then(
+                                                            (project_data) => {
+                                                                // todo: do it this way add two input block one for project and one for file and when someone selects a project display the files below it based on the selected project.
+                                                                project_data.forEach(
+                                                                    (
+                                                                        project
+                                                                    ) => {
+                                                                        project.data.files.forEach(
+                                                                            (
+                                                                                file // fix this bug which occurs after assigning file type
+                                                                            ) =>
+                                                                                files_in_team.push(
+                                                                                    file.key
+                                                                                )
+                                                                        );
+                                                                    }
+                                                                );
+                                                            }
+                                                        )
+                                                        .catch(async () => {
+                                                            //
+                                                        });
+                                                    teamData.projects =
+                                                        projects_in_team.slice();
+                                                    teamData.files =
+                                                        files_in_team.slice();
+                                                } catch (e) {
+                                                    //
+                                                }
+                                            }
+                                        })
+                                        .catch((error) => {
+                                            console.log('error: ', error);
+                                        });
+                                }
+                                if (subscriptions && subscriptions.length) {
+                                    for (const subscription of subscriptions) {
+                                        // for every subscription
+                                        // 1 - Inside this subscription 🤯 '
+                                        // now we are entering the room data zone to modify it.
+                                        // now we are entering the room data zone to modify it.'
+                                        for (const room_data of subscription.room_data) {
+                                            // 2 - we are at room data level and this will run as many times as the number of room data we have 🏡
+                                            const returnValue: {
+                                                success: boolean;
+                                            } = await updateSubscriptionHandler(
+                                                context,
+                                                this.persistence,
+                                                this.read,
+                                                this.http,
+                                                team_id,
+                                                room,
+                                                user,
+                                                room_data,
+                                                event_type,
+                                                subscription,
+                                                project_Ids,
+                                                file_Ids,
+                                                subscriptionStorage,
+                                                teamData
+                                            );
+
+                                            if (!returnValue.success) {
+                                                return;
+                                            }
+                                        }
+                                    }
+
+                                    const block = this.modify
+                                        .getCreator()
+                                        .getBlockBuilder();
+
+                                    if (
+                                        !project_Ids?.length &&
+                                        !file_Ids?.length
+                                    ) {
+                                        console.log('team');
+
+                                        //todo: update this message later and add subscribed events too
+                                        block.addSectionBlock({
+                                            text: {
+                                                text: `A new team subscriptions is created by *${user.name}*. You will start receiving notifications for updates and comments inside the team in this channel.`,
+                                                type: TextObjectType.MARKDOWN
+                                            }
+                                        });
+                                        // create button action block
+                                        block.addActionsBlock({
+                                            elements: [
+                                                block.newButtonElement({
+                                                    actionId: 'view_team',
+                                                    text: block.newPlainTextObject(
+                                                        'View Team Inside Figma'
+                                                    ),
+                                                    url: `https://www.figma.com/files/team/${team_id}`
+                                                })
+                                            ]
+                                        });
+                                    } else if (
+                                        project_Ids?.length &&
+                                        !file_Ids?.length
+                                    ) {
+                                        // get project details from figma
+                                        // todo: send all the projects details inside channel
+                                        block.addSectionBlock({
+                                            text: {
+                                                text: `New subscriptions for projects is created by *${user.name}*. You will start receiving notifications for updates and comments inside the project in this channel. If you have not connected your figma account to rocket chat please connect by typing \`/figma connect\``,
+                                                type: TextObjectType.MARKDOWN
+                                            }
+                                        });
+
+                                        block.addActionsBlock({
+                                            elements: [
+                                                block.newButtonElement({
+                                                    actionId: 'view_projects',
+                                                    text: block.newPlainTextObject(
+                                                        'View Projects Inside Figma'
+                                                    ),
+                                                    url: `https://www.figma.com/files/team/${team_id}`
+                                                })
+                                            ]
+                                        });
+                                    } else if (
+                                        !project_Ids?.length &&
+                                        file_Ids?.length
+                                    ) {
+                                        block.addSectionBlock({
+                                            text: {
+                                                text: `New subscriptions for Files is created by *${user.name}*. You will start receiving notifications for updates and comments from these files in this channel. If you have not connected your figma account to rocket chat please connect by typing \`/figma connect\``,
+                                                type: TextObjectType.MARKDOWN
+                                            }
+                                        });
+                                        block.addActionsBlock({
+                                            elements: [
+                                                block.newButtonElement({
+                                                    actionId: 'view_files',
+                                                    text: block.newPlainTextObject(
+                                                        'View files Inside Figma'
+                                                    ),
+                                                    url: `https://www.figma.com/files/team/${team_id}`
+                                                })
+                                            ]
+                                        });
+                                    }
+                                    await botMessageChannel(
+                                        this.read,
+                                        this.modify,
+                                        room,
+                                        block
+                                    );
+                                } else {
+                                    // 1 - no subscription found'
+                                    let counter = 0;
+                                    [
+                                        events.COMMENT,
+                                        events.DELETE,
+                                        events.LIBRARY_PUBLISHED,
+                                        events.UPDATE,
+                                        events.VERSION_UPDATE
+                                    ].map(async (event) => {
+                                        // our main logic is to hook into figma 5 times for every event type
+                                        const data = {
+                                            event_type: event,
+                                            team_id: team_id,
+                                            endpoint: url,
+                                            passcode: room.id, // Send room id as passcode
+                                            description: room.id
+                                        };
+                                        // we send request to figma webhook to create a hook for every event ( runs 5 times )
+                                        await postRequest(
+                                            this.read,
+                                            context,
+                                            this.http,
+                                            'https://api.figma.com/v2/webhooks',
+                                            data
+                                        )
+                                            .then(async (response) => {
+                                                // when a hook is created successfully we save it in db
+                                                if (
+                                                    response.data.error === true
+                                                ) {
+                                                    // todo : manage this logic in a better way which covers all the edge cases. If for any request there is a error response then delete the created hooks and send the error message to user
+                                                    if (counter === 4) {
+                                                        await botNotifyCurrentUser(
+                                                            this.read,
+                                                            this.modify,
+                                                            user,
+                                                            room,
+                                                            response.data.reason
+                                                        );
+                                                        // todo: for now figma gives a reason and says to delete a webhook but modify it to say at least 5 webhooks.
+                                                    } else {
+                                                        console.log(
+                                                            'error: response data error'
+                                                        );
+                                                    }
+                                                } else {
+                                                    await createWebhookSubscription
+                                                        .createWebhookResponseHandler(
+                                                            context,
+                                                            response,
+                                                            room,
+                                                            user,
+                                                            project_Ids,
+                                                            file_Ids,
+                                                            team_id,
+                                                            event_type,
+                                                            event
+                                                        )
+                                                        .then(async () => {
+                                                            if (counter === 4) {
+                                                                const block =
+                                                                    this.modify
+                                                                        .getCreator()
+                                                                        .getBlockBuilder();
+
+                                                                if (
+                                                                    !project_Ids?.length &&
+                                                                    !file_Ids?.length
+                                                                ) {
+                                                                    //todo: update this message later and add subscribed events too
+                                                                    block.addSectionBlock(
+                                                                        {
+                                                                            text: {
+                                                                                text: `A new team subscriptions is created by *${user.name}*. You will start receiving notifications for updates and comments inside the team in this channel. If you have not connected your figma account to rocket chat please connect by typing \`/figma connect\``,
+                                                                                type: TextObjectType.MARKDOWN
+                                                                            }
+                                                                        }
+                                                                    );
+                                                                    // create button action block
+                                                                    block.addActionsBlock(
+                                                                        {
+                                                                            elements:
+                                                                                [
+                                                                                    block.newButtonElement(
+                                                                                        {
+                                                                                            actionId:
+                                                                                                'view_team',
+                                                                                            text: block.newPlainTextObject(
+                                                                                                'View Team Inside Figma'
+                                                                                            ),
+                                                                                            url: `https://www.figma.com/files/team/${team_id}`
+                                                                                        }
+                                                                                    )
+                                                                                ]
+                                                                        }
+                                                                    );
+                                                                } else if (
+                                                                    project_Ids?.length &&
+                                                                    !file_Ids?.length
+                                                                ) {
+                                                                    // get project details from figma
+                                                                    // todo: send all the projects details inside channel
+                                                                    block.addSectionBlock(
+                                                                        {
+                                                                            text: {
+                                                                                text: `New subscriptions for projects is created by *${user.name}*. You will start receiving notifications for updates and comments inside the project in this channel. If you have not connected your figma account to rocket chat please connect by typing \`/figma connect\``,
+                                                                                type: TextObjectType.MARKDOWN
+                                                                            }
+                                                                        }
+                                                                    );
+
+                                                                    block.addActionsBlock(
+                                                                        {
+                                                                            elements:
+                                                                                [
+                                                                                    block.newButtonElement(
+                                                                                        {
+                                                                                            actionId:
+                                                                                                'view_projects',
+                                                                                            text: block.newPlainTextObject(
+                                                                                                'View Projects Inside Figma'
+                                                                                            ),
+                                                                                            url: `https://www.figma.com/files/team/${team_id}`
+                                                                                        }
+                                                                                    )
+                                                                                ]
+                                                                        }
+                                                                    );
+                                                                } else if (
+                                                                    !project_Ids?.length &&
+                                                                    file_Ids?.length
+                                                                ) {
+                                                                    block.addSectionBlock(
+                                                                        {
+                                                                            text: {
+                                                                                text: `New subscriptions for Files is created by *${user.name}*. You will start receiving notifications for updates and comments from these files in this channel. If you have not connected your figma account to rocket chat please connect by typing \`/figma connect\``,
+                                                                                type: TextObjectType.MARKDOWN
+                                                                            }
+                                                                        }
+                                                                    );
+                                                                    block.addActionsBlock(
+                                                                        {
+                                                                            elements:
+                                                                                [
+                                                                                    block.newButtonElement(
+                                                                                        {
+                                                                                            actionId:
+                                                                                                'view_files',
+                                                                                            text: block.newPlainTextObject(
+                                                                                                'View files Inside Figma'
+                                                                                            ),
+                                                                                            url: `https://www.figma.com/files/team/${team_id}`
+                                                                                        }
+                                                                                    )
+                                                                                ]
+                                                                        }
+                                                                    );
+                                                                }
+                                                                await botMessageChannel(
+                                                                    this.read,
+                                                                    this.modify,
+                                                                    room,
+                                                                    block
+                                                                );
+                                                            }
+                                                            return;
+                                                        })
+                                                        .catch(async () => {
+                                                            if (count === 4) {
+                                                                await botNotifyCurrentUser(
+                                                                    this.read,
+                                                                    this.modify,
+                                                                    user,
+                                                                    room,
+                                                                    'error subscribing to the file please try again'
+                                                                );
+                                                            }
+                                                            return;
+                                                        });
+                                                }
+                                                counter++;
+                                            })
+                                            .catch((e) => {
+                                                botNotifyCurrentUser(
+                                                    this.read,
+                                                    this.modify,
+                                                    user,
+                                                    room,
+                                                    `Error Subscribing to file from figma, ${e.message}`
+                                                );
+                                            })
+                                            .finally(() => count++);
+                                    });
+                                }
+                            })
+                            .catch(async (err) => {
+                                return await botNotifyCurrentUser(
+                                    this.read,
+                                    this.modify,
+                                    user,
+                                    room,
+                                    `Error Subscribing to file from figma, ${err.message}`
+                                );
+                            })
+                            .finally(() => {
+                                console.log(
+                                    'done: Subscription created successfully'
+                                );
                             });
-                        // let count = 0; // this counter we will use if if there are only 4 or less hooks left to create in figma we will notify the use that subscription was unsuccessful and delete some in figma
-                        // subscriptionStorage
-                        //     .getSubscriptionsByTeam(team_id)
-                        //     .then(async (subscriptions) => {
-                        //         if (subscriptions && subscriptions.length) {
-                        //             for (const subscription of subscriptions) {
-                        //                 console.log(
-                        //                     '1 - found subscription for event 🤯 ',
-                        //                     subscription.event_name
-                        //                 );
-                        //                 if (
-                        //                     subscription.team_id === team_id &&
-                        //                     subscription.room_data.length > 0
-                        //                 ) {
-                        //                     // now we are entering the room data zone to modify it.
-                        //                     for (const room_data of subscription.room_data) {
-                        //                         console.log(
-                        //                             '2 - team id matched 🏡 ',
-                        //                             room_data
-                        //                         );
-                        //                         updateSubscriptionHandler(
-                        //                             room,
-                        //                             user,
-                        //                             room_data,
-                        //                             event_type,
-                        //                             subscription,
-                        //                             project_Ids,
-                        //                             file_Ids,
-                        //                             subscriptionStorage
-                        //                         );
-                        //                         // lets update only those whose event matches with previous events and remove room from those events which are not there in the current passed data by user
-                        //                     }
-                        //                 } else {
-                        //                     // If the room does not exist then update the subscription
-                        //                     console.log(
-                        //                         '2 - subscription does not exist ❌ ',
-                        //                         subscription.team_id,
-                        //                         subscription.room_data
-                        //                     );
-                        //                 }
-                        //             }
-                        //         } else {
-                        //             console.log(' 1 - no subscription found');
-                        //             let counter = 0;
-                        //             [
-                        //                 events.COMMENT,
-                        //                 events.DELETE,
-                        //                 events.LIBRARY_PUBLISHED,
-                        //                 events.UPDATE,
-                        //                 events.VERSION_UPDATE
-                        //             ].map(async (event) => {
-                        //                 // our main logic is to hook into figma 5 times for every event type
-                        //                 const data = {
-                        //                     event_type: event,
-                        //                     team_id: team_id,
-                        //                     endpoint: url,
-                        //                     passcode: room.id, // Send room id as passcode
-                        //                     description: room.id
-                        //                 };
-
-                        //                 // we send request to figma webhook to create a hook for every event ( runs 5 times )
-                        //                 await postRequest(
-                        //                     this.read,
-                        //                     context,
-                        //                     this.http,
-                        //                     'https://api.figma.com/v2/webhooks',
-                        //                     data
-                        //                 )
-                        //                     .then(async (response) => {
-                        //                         // when a hook is created successfully we save it in db
-                        //                         if (
-                        //                             response.data.error === true
-                        //                         ) {
-                        //                             // todo : manage this logic in a better way which covers all the edge cases. If for any request there is a error response then delete the created hooks and send the error message to user
-                        //                             if (counter === 4) {
-                        //                                 await botNotifyCurrentUser(
-                        //                                     this.read,
-                        //                                     this.modify,
-                        //                                     user,
-                        //                                     room,
-                        //                                     response.data.reason
-                        //                                 );
-                        //                                 // todo: for now figma gives a reason and says to delete a webhook but modify it to say at least 5 webhooks.
-                        //                             } else {
-                        //                                 console.log(
-                        //                                     'response data error'
-                        //                                 );
-                        //                             }
-                        //                         } else {
-                        //                             await createWebhookSubscription
-                        //                                 .createWebhookResponseHandler(
-                        //                                     context,
-                        //                                     response,
-                        //                                     room,
-                        //                                     user,
-                        //                                     project_Ids,
-                        //                                     file_Ids,
-                        //                                     team_id,
-                        //                                     event_type,
-                        //                                     event
-                        //                                 )
-                        //                                 .then(async () => {
-                        //                                     if (counter === 4) {
-                        //                                         // check for what the subscription is created
-                        //                                         // if it is created for a single or some files then sned htose files with images and link to those files
-                        //                                         // if for team then send a message with link to the project
-                        //                                         // if for project then list the name of all the projects
-                        //                                         // now how to check for what the subscription is created
-                        //                                         // for team both project and files will be empty
-                        //                                         // validation
-                        //                                         console.log(
-                        //                                             ' subscription for team - ',
-                        //                                             project_Ids,
-                        //                                             file_Ids
-                        //                                         );
-                        //                                         if (
-                        //                                             project_Ids?.length ===
-                        //                                                 0 &&
-                        //                                             file_Ids?.length ===
-                        //                                                 0
-                        //                                         ) {
-                        //                                             console.log(
-                        //                                                 'team'
-                        //                                             );
-                        //                                             await botNotifyCurrentUser(
-                        //                                                 this
-                        //                                                     .read,
-                        //                                                 this
-                        //                                                     .modify,
-                        //                                                 user,
-                        //                                                 room,
-                        //                                                 'Subscription created for team'
-                        //                                             );
-                        //                                         } else if (
-                        //                                             project_Ids &&
-                        //                                             file_Ids?.length ===
-                        //                                                 0
-                        //                                         ) {
-                        //                                             console.log(
-                        //                                                 'project'
-                        //                                             );
-                        //                                             await botNotifyCurrentUser(
-                        //                                                 this
-                        //                                                     .read,
-                        //                                                 this
-                        //                                                     .modify,
-                        //                                                 user,
-                        //                                                 room,
-                        //                                                 'Subscription created for project'
-                        //                                             );
-                        //                                         } else if (
-                        //                                             project_Ids?.length ===
-                        //                                                 0 &&
-                        //                                             file_Ids
-                        //                                         ) {
-                        //                                             console.log(
-                        //                                                 'file'
-                        //                                             );
-                        //                                             await botNotifyCurrentUser(
-                        //                                                 this
-                        //                                                     .read,
-                        //                                                 this
-                        //                                                     .modify,
-                        //                                                 user,
-                        //                                                 room,
-                        //                                                 'Subscription created for file'
-                        //                                             );
-                        //                                         }
-
-                        //                                         // const block =
-                        //                                         //     this.modify
-                        //                                         //         .getCreator()
-                        //                                         //         .getBlockBuilder();
-                        //                                         // block.addSectionBlock(
-                        //                                         //     {
-                        //                                         //         text: {
-                        //                                         //             text: `A new subscriptions is created successfully by ${user.name}. You will start receiving notifications for updates and comments inside the team in this channel.`,
-                        //                                         //             type: TextObjectType.PLAINTEXT
-                        //                                         //         }
-                        //                                         //     }
-                        //                                         // );
-                        //                                         // await botMessageChannel(
-                        //                                         //     this.read,
-                        //                                         //     this.modify,
-                        //                                         //     room,
-                        //                                         //     block
-                        //                                         // );
-                        //                                     }
-                        //                                     return;
-                        //                                 })
-                        //                                 .catch(async () => {
-                        //                                     if (count === 4) {
-                        //                                         await botNotifyCurrentUser(
-                        //                                             this.read,
-                        //                                             this.modify,
-                        //                                             user,
-                        //                                             room,
-                        //                                             'error subscribing to the file please try again'
-                        //                                         );
-                        //                                     }
-                        //                                     return;
-                        //                                 });
-                        //                         }
-                        //                         counter++;
-                        //                     })
-                        //                     .catch((e) => {
-                        //                         botNotifyCurrentUser(
-                        //                             this.read,
-                        //                             this.modify,
-                        //                             user,
-                        //                             room,
-                        //                             `Error Subscribing to file from figma, ${e.message}`
-                        //                         );
-                        //                     })
-                        //                     .finally(() => count++);
-                        //             });
-                        //         }
-                        //     })
-                        //     .catch(async (err) => {
-                        //         return await botNotifyCurrentUser(
-                        //             this.read,
-                        //             this.modify,
-                        //             user,
-                        //             room,
-                        //             `Error Subscribing to file from figma, ${err.message}`
-                        //         );
-                        //     });
                     }
                 }
             }

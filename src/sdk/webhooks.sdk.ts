@@ -89,7 +89,6 @@ export class Subscription {
                 file_Ids: files_id
             }
         ];
-        console.log('5 - room data stored ');
         try {
             const associations: RocketChatAssociationRecord[] = [
                 new RocketChatAssociationRecord(
@@ -185,7 +184,6 @@ export class Subscription {
         user_id: string
     ): Promise<string> {
         try {
-            console.log('inside subscription update - room data > ', room_data);
             const associations: RocketChatAssociationRecord[] = [
                 new RocketChatAssociationRecord(
                     RocketChatAssociationModel.MISC,
@@ -275,7 +273,6 @@ export class Subscription {
                     `webhook_id:${hook_id}`
                 )
             ];
-            console.log('webhook id to be matched - ', hook_id);
 
             subscriptions = (await this.persistenceRead.readByAssociations(
                 associations
