@@ -26,7 +26,6 @@ export class CommentModalHandler {
         const { user } = context.getInteractionData();
         const accessToken = await getAccessTokenForUser(this.read, user);
         if (room) {
-            console.log('1 - ', view.state);
             const postData: IHttpRequest = {
                 headers: {
                     Authorization: `Bearer ${accessToken?.token}`
@@ -35,17 +34,13 @@ export class CommentModalHandler {
                     message: view.state.new_comment.comment
                 }
             };
-            console.log('2');
-
-            console.log('post dat - ', postData, view);
-
+            console.log('post data - ', postData, view.commentData);
             this.http
                 .post(
-                    `https://api.figma.com/v1/files/${view.commentData.fileKey}/comments`,
+                    `https://api.figma.com/v1/files/${view.commentData}/comments`,
                     postData
                 )
                 .then(async (res) => {
-                    console.log('3');
 
                     console.log('post comment data ', res); // remove this
                     // if res.data.status starts with 400 then show error message

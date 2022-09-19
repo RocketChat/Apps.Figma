@@ -91,16 +91,6 @@ export class BlockActionHandler {
                             break;
                         case blockAction.POST:
                             console.log('inside post reply');
-                            await commentReply(
-                                modify,
-                                context,
-                                persistence,
-                                read,
-                                data,
-                                room,
-                                user,
-                                http
-                            );
                             break;
                         case blockAction.COMMENT:
                             await newComment(

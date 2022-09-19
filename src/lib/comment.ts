@@ -42,28 +42,8 @@ export async function newComment(
             type: BlockElementType.PLAIN_TEXT_INPUT
         }
     });
-
-    let commentData: any;
+    const commentData = context.getInteractionData().value?.split('/')[5];
     // for the opened block run the code
-    context.getInteractionData().message?.blocks?.forEach((block: any) => {
-        if (block) {
-            if (block.type === 'actions') {
-                block?.elements.forEach((element) => {
-                    // check if the element is active or not
-                    if (element.type === 'active') {
-                        console.log('element is active');
-                    } else {
-                        console.log('element is not active');
-                    }
-                });
-                //commentData = block?.elements[1].value;
-            }
-            //console.log('commentId', commentId);
-        } else {
-            console.log('block is undefined - ', block);
-        }
-        return;
-    });
 
     const modal = {
         id: 'commentView',

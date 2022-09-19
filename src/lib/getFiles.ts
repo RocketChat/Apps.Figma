@@ -1,5 +1,6 @@
 import {
     IHttp,
+    IHttpResponse,
     IModify,
     IPersistence,
     IRead
@@ -9,11 +10,7 @@ import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { getAccessTokenForUser } from '../storage/users';
 import { Subscription } from '../sdk/webhooks.sdk';
 import { storedRoomData } from '../definition';
-import {
-    botMessageChannel,
-    botNotifyCurrentUser,
-    sendMessage
-} from './messages';
+import { botMessageChannel, botNotifyCurrentUser } from './messages';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { blockAction } from '../enums/enums';
 
@@ -57,7 +54,7 @@ export async function getFiles(
                     modify,
                     user,
                     room,
-                    'Could not find any files subscribed in this room'
+                    'Could not find any files subscriptions'
                 );
             }
             // get all subscriptions then check rom_data for every subscriptions if room_data.room_id matches with the current room then send all the files inside those arrays to the user
@@ -65,6 +62,7 @@ export async function getFiles(
             for (const subscription of subscriptions) {
                 const roomData: storedRoomData[] = subscription.room_data;
                 for (const room_data of roomData) {
+                    console.log('room data', room_data);
                     if (room_data.room_Id === room.id && room_data.file_Ids) {
                         room_files_ids.push(...room_data.file_Ids);
                     }
@@ -91,37 +89,34 @@ export async function getFiles(
                     )
                 )
                     .then(async (project_response) => {
-                        // send message to the user with a block of all the files name fetched from figma api
+                        const fileDetails: {
+                            name: string;
+                            apiUrl: string;
+                            id: string;
+                        }[] = [];
                         if (project_response.length > 0) {
-                            const fileDetails: { id: string; name: string }[] =
-                                [];
-                            const filesData = project_response.map(
-                                (response) => {
-                                    const data = response.data.document;
-                                    console.log('data - ', data);
-                                    fileDetails.concat(data);
-                                    return;
-                                }
-                            );
-                            console.log('files data - ', filesData.length);
-
+                            project_response.map((response) => {
+                                const apiUrl = response.url;
+                                const name = response.data.name;
+                                const id = apiUrl.split('/')[5];
+                                fileDetails.push({ name, apiUrl, id });
+                                return;
+                            });
+                            console.log('files data - ', fileDetails);
                             const block = modify.getCreator().getBlockBuilder();
-
                             block.addSectionBlock({
                                 text: {
                                     type: TextObjectType.PLAINTEXT,
                                     text: 'Files in this room'
                                 }
                             });
-
                             fileDetails.map((file) => {
                                 block.addSectionBlock({
                                     text: {
                                         type: TextObjectType.MARKDOWN,
-                                        text: `> ${file.name}`
+                                        text: `> *${file.name}*`
                                     }
                                 });
-
                                 block.addActionsBlock({
                                     blockId: blockAction.FILE_ACTIONS,
                                     elements: [
@@ -130,21 +125,28 @@ export async function getFiles(
                                             text: block.newPlainTextObject(
                                                 'Comment'
                                             ),
-                                            value: `${file.id}`
+                                            value: `${file.apiUrl}`
                                         }),
                                         block.newButtonElement({
                                             actionId: blockAction.OPEN_FILE,
                                             text: block.newPlainTextObject(
                                                 'Open file'
                                             ),
-                                            value: `${file.id}`,
-                                            url: `https://www.figma.com/file/${file.id}`
+                                            url: `https://www.figma.com/file/${file.id}`,
+                                            value: `${file.id}`
                                         })
                                     ]
                                 });
                             });
 
-                            botMessageChannel(read, modify, room, block);
+                            return await botNotifyCurrentUser(
+                                read,
+                                modify,
+                                user,
+                                room,
+                                '',
+                                block
+                            );
                         } else {
                             return await botNotifyCurrentUser(
                                 read,

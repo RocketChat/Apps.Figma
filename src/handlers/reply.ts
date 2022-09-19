@@ -35,7 +35,7 @@ export class ExecuteReplyHandler {
                     comment_id: view.commentData.commentId
                 }
             };
-            console.log('post dat - ', postData);
+            console.log('post data - ', postData, view.block);
 
             this.http
                 .post(
