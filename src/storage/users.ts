@@ -85,6 +85,7 @@ export async function remove(
     await persistence.updateByAssociation(assoc, users);
 }
 
+
 /**
  * Returns all users from the database
  * @param read - accessor to the environment
