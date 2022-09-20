@@ -44,7 +44,6 @@ export async function commentReply(
     		if (block.type === 'actions') {
     			commentData = block?.elements[1].value;
 			}
-			//console.log('commentId', commentId);
     	} else {
     		console.log('error: block is undefined - ', block);
     	}

@@ -116,11 +116,9 @@ export class AddSubscription {
                                         `https://api.figma.com/v1/teams/${team_id}/projects`
                                     )
                                         .then(async (team_response) => {
-                                            //console.log('response from figma for projects - ', team_response);
                                             const reqUrls =
                                                 team_response.data.projects.map(
                                                     (project: any) => {
-                                                        console.log(project.id);
                                                         projects_in_team.push(
                                                             project.id
                                                         );
@@ -216,8 +214,6 @@ export class AddSubscription {
                                         !project_Ids?.length &&
                                         !file_Ids?.length
                                     ) {
-                                        console.log('team');
-
                                         //todo: update this message later and add subscribed events too
                                         block.addSectionBlock({
                                             text: {

@@ -160,7 +160,7 @@ export async function updateSubscriptionHandler(
                     user.id
                 )
                 .then((res) => {
-                    console.log('8 - updated subscription');
+                    console.log(' do: updated subscription');
                     return { success: true };
                 })
                 .catch((err) => {

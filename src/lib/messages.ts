@@ -95,10 +95,34 @@ export async function botMessageChannel(
         }
         return modify.getCreator().finish(msg);
     }
-    console.log('app user not found user reader - ', read.getUserReader());
+    console.log('error: app user not found user reader - ', read.getUserReader());
     return '';
 }
-
+export async function botNormalMessageChannel(
+    read: IRead,
+    modify: IModify,
+    room: IRoom,
+    message: string,
+    blocks?: BlockBuilder | [IBlock]
+): Promise<string> {
+    const appUser = await read.getUserReader().getAppUser();
+    if (appUser) {
+        const msg = modify
+            .getCreator()
+            .startMessage()
+            .setSender(appUser)
+            .setRoom(room)
+            .setGroupable(false)
+            .setParseUrls(false)
+            .setText(message);
+        if (blocks !== undefined) {
+            msg.setBlocks(blocks);
+        }
+        return modify.getCreator().finish(msg);
+    }
+    console.log('error: app user not found user reader - ', read.getUserReader());
+    return '';
+}
 export async function shouldSendMessage(
     read: IRead,
     persistence: IPersistence,

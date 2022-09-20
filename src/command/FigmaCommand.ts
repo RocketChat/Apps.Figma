@@ -115,12 +115,8 @@ export class FigmaCommand implements ISlashCommand {
     ): Promise<void> {
         const message = `Commands available inside a channel:
         \xa0\xa0• To connect your Figma account with the rocket chat server use command \`/figma connect\`.
-        \xa0\xa0• To subscribe for updates to a any file/project from figma inside rocket chat use command \`/figma subscribe\`.
-        \xa0\xa0 • To unsubscribe to a file inside a channel use \`/figma unsubscribe\`.
-
-          Commands available inside Direct Messages:
-        \xa0\xa0• \` /figma off \` to turn off notifications.
-        \xa0\xa0• \` /figma on \` to turn notifications back on.
+        \xa0\xa0• To subscribe for updates to a any file/project/team from figma inside rocket chat use command \`/figma subscribe\`.
+        \xa0\xa0 • To list all the subscriptions use \`/figma list\`.
          `;
         await sendDMToUser(read, modify, user, message, persistence);
     }

@@ -63,7 +63,7 @@ export async function subscriptionsModal({
             block.newStaticSelectElement({
                 placeholder: block.newPlainTextObject('File'),
                 actionId: 'type',
-                initialValue: 'team',
+                initialValue: 'file',
                 options: [
                     {
                         text: block.newPlainTextObject('File'),

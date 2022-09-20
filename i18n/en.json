@@ -1,5 +1,5 @@
 {
     "cmd_description": "Get Figma notifications in your channel",
-    "params_example": "help | connect | subscribe | unsubscribe "
+    "params_example": "help | connect | subscribe | list "
 }
 

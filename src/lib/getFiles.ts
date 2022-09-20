@@ -62,7 +62,6 @@ export async function getFiles(
             for (const subscription of subscriptions) {
                 const roomData: storedRoomData[] = subscription.room_data;
                 for (const room_data of roomData) {
-                    console.log('room data', room_data);
                     if (room_data.room_Id === room.id && room_data.file_Ids) {
                         room_files_ids.push(...room_data.file_Ids);
                     }
@@ -102,7 +101,6 @@ export async function getFiles(
                                 fileDetails.push({ name, apiUrl, id });
                                 return;
                             });
-                            console.log('files data - ', fileDetails);
                             const block = modify.getCreator().getBlockBuilder();
                             block.addSectionBlock({
                                 text: {
@@ -158,7 +156,6 @@ export async function getFiles(
                         }
                     })
                     .catch(async (e) => {
-                        console.log('error is - ', e);
                         return await botNotifyCurrentUser(
                             read,
                             modify,

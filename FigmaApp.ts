@@ -64,10 +64,6 @@ export class FigmaApp extends App {
         persistence: IPersistence,
         modify: IModify
     ) {
-        console.log(
-            'modal title - ',
-            context.getInteractionData().view.title.text
-        );
         const user: IUser = context.getInteractionData().user;
         const room = await getRoom(read, user);
         if (room) {
@@ -86,7 +82,7 @@ export class FigmaApp extends App {
                 return await handler
                     .run(context, room)
                     .catch((err) =>
-                        console.log('error: submitting 2nd modal', err)
+                        console.log('error: submitting Events modal', err)
                     );
             } else if (
                 context.getInteractionData().view.title.text ===
@@ -108,7 +104,6 @@ export class FigmaApp extends App {
                 context.getInteractionData().view.title.text ===
                 modalTitle.REPLY_MODAL
             ) {
-                console.log('inside reply modal');
                 const handler = new ExecuteReplyHandler(
                     this,
                     read,
@@ -121,7 +116,6 @@ export class FigmaApp extends App {
                 context.getInteractionData().view.title.text ===
                 modalTitle.CREATE_COMMENT_MODAL
             ) {
-                console.log('inside create comment modal');
                 const handler = new CommentModalHandler(
                     this,
                     read,
