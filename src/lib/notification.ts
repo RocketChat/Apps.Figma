@@ -36,7 +36,6 @@ export class NotificationsController {
         const [record] = await this.read
             .getPersistenceReader()
             .readByAssociations([this.association, this.userAssociation]);
-
         return record as INotificationsStatus;
     }
 
@@ -48,9 +47,9 @@ export class NotificationsController {
         return status;
     }
 
+    // this function updates the user's notification status in the database and returns the new status (true or false)
     public async updateNotificationsStatus(status: boolean) {
         const notificationsStatus = await this.getNotificationsStatus();
-
         if (!notificationsStatus) {
             return await this.setNotificationsStatus(status);
         }

@@ -17,3 +17,10 @@ Here are some links to examples and documentation:
   - [App Guides](https://forums.rocket.chat/c/rocket-chat-apps/guides)
   - [Top View of Both Categories](https://forums.rocket.chat/c/rocket-chat-apps)
 - [#rocketchat-apps on Open.Rocket.Chat](https://open.rocket.chat/channel/rocketchat-apps)
+
+## Figma App
+
+- User can subscribe to only those files which are available under a team
+- Users will be notified for files that are available to everyone on the team, or are in view-only projects.
+- Users will not be notified for files in invite-only projects.
+
