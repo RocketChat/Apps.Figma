@@ -1,6 +1,5 @@
 import {
     IHttp,
-    IHttpResponse,
     IModify,
     IPersistence,
     IRead
@@ -10,11 +9,15 @@ import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { getAccessTokenForUser } from '../storage/users';
 import { Subscription } from '../sdk/webhooks.sdk';
 import { storedRoomData } from '../definition';
-import { botMessageChannel, botNotifyCurrentUser } from './messages';
+import {
+    botMessageChannel,
+    botNotifyCurrentUser,
+    sendMessage
+} from './messages';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { blockAction } from '../enums/enums';
 
-export async function getFiles(
+export async function getProjects(
     modify: IModify,
     context,
     persistence: IPersistence,
@@ -54,92 +57,72 @@ export async function getFiles(
                     modify,
                     user,
                     room,
-                    'Could not find any files subscriptions'
+                    'Could not find any project subscribed in this room'
                 );
             }
-            // get all subscriptions then check rom_data for every subscriptions if room_data.room_id matches with the current room then send all the files inside those arrays to the user
-            const room_files_ids: string[] = [];
+            const room_projects_ids: string[] = [];
             for (const subscription of subscriptions) {
                 const roomData: storedRoomData[] = subscription.room_data;
                 for (const room_data of roomData) {
-                    console.log('room data', room_data);
-                    if (room_data.room_Id === room.id && room_data.file_Ids) {
-                        room_files_ids.push(...room_data.file_Ids);
+                    if (
+                        room_data.room_Id === room.id &&
+                        room_data.project_Ids
+                    ) {
+                        room_projects_ids.push(...room_data.project_Ids);
                     }
                 }
             }
-            if (room_files_ids.length === 0) {
+            if (room_projects_ids.length === 0) {
+                console.log('send error message');
                 return await botNotifyCurrentUser(
                     read,
                     modify,
                     user,
                     room,
-                    'Could not find any file subscribed in this room'
+                    'Could not find any projects subscribed by you in this room'
                 );
             }
-            const filesDataReqUrls = removeDuplicates(room_files_ids).map(
-                (file_id) => `https://api.figma.com/v1/files/${file_id}`
+            const projectDataRequestUrl = removeDuplicates(
+                room_projects_ids
+            ).map(
+                (projectId) =>
+                    `https://api.figma.com/v1/projects/${projectId}/files`
             );
             try {
                 await Promise.all(
-                    filesDataReqUrls.map((url) =>
+                    projectDataRequestUrl.map((url) =>
                         http.get(url, {
                             headers
                         })
                     )
                 )
                     .then(async (project_response) => {
-                        const fileDetails: {
-                            name: string;
-                            apiUrl: string;
-                            id: string;
-                        }[] = [];
                         if (project_response.length > 0) {
-                            project_response.map((response) => {
-                                const apiUrl = response.url;
-                                const name = response.data.name;
-                                const id = apiUrl.split('/')[5];
-                                fileDetails.push({ name, apiUrl, id });
-                                return;
-                            });
-                            console.log('files data - ', fileDetails);
+                            const projectDetails = project_response.map(
+                                (response) => response.data
+                            );
+                            const projectName = projectDetails.map(
+                                (project) => project.name
+                            );
                             const block = modify.getCreator().getBlockBuilder();
+
                             block.addSectionBlock({
                                 text: {
                                     type: TextObjectType.PLAINTEXT,
-                                    text: 'Files in this room'
+                                    text: 'Projects Subscribed in this room'
                                 }
                             });
-                            fileDetails.map((file) => {
+
+                            projectName.map((projectName) => {
                                 block.addSectionBlock({
                                     text: {
                                         type: TextObjectType.MARKDOWN,
-                                        text: `> *${file.name}*`
+                                        text: `> ${projectName}`
                                     }
-                                });
-                                block.addActionsBlock({
-                                    blockId: blockAction.FILE_ACTIONS,
-                                    elements: [
-                                        block.newButtonElement({
-                                            actionId: blockAction.COMMENT,
-                                            text: block.newPlainTextObject(
-                                                'Comment'
-                                            ),
-                                            value: `${file.apiUrl}`
-                                        }),
-                                        block.newButtonElement({
-                                            actionId: blockAction.OPEN_FILE,
-                                            text: block.newPlainTextObject(
-                                                'Open file'
-                                            ),
-                                            url: `https://www.figma.com/file/${file.id}`,
-                                            value: `${file.id}`
-                                        })
-                                    ]
                                 });
                             });
 
-                            return await botNotifyCurrentUser(
+                            botNotifyCurrentUser(
                                 read,
                                 modify,
                                 user,
@@ -147,24 +130,24 @@ export async function getFiles(
                                 '',
                                 block
                             );
+                            return;
                         } else {
                             return await botNotifyCurrentUser(
                                 read,
                                 modify,
                                 user,
                                 room,
-                                'Could not find any files subscribed in this room'
+                                'Could not find any projects subscribed by you in this room'
                             );
                         }
                     })
-                    .catch(async (e) => {
-                        console.log('error is - ', e);
+                    .catch(async () => {
                         return await botNotifyCurrentUser(
                             read,
                             modify,
                             user,
                             room,
-                            'There was an error'
+                            'Error in fetching files details'
                         );
                     });
             } catch (e) {
@@ -173,7 +156,7 @@ export async function getFiles(
                     modify,
                     user,
                     room,
-                    'Error in fetching files. Please Report this issue'
+                    'Error in fetching projects. Please Report this issue'
                 );
             }
         })
@@ -184,7 +167,7 @@ export async function getFiles(
                 modify,
                 user,
                 room,
-                'Error in fetching files. Please Report this issue'
+                'error getting all subscriptions'
             );
         });
 }

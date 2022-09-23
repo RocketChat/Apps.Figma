@@ -12,7 +12,7 @@ import { FigmaApp } from '../../FigmaApp';
 import { botNotifyCurrentUser } from '../lib/messages';
 import { getAccessTokenForUser } from '../storage/users';
 
-export class ExecuteReplyHandler {
+export class CommentModalHandler {
     constructor(
         private readonly app: FigmaApp,
         private readonly read: IRead,
@@ -31,18 +31,17 @@ export class ExecuteReplyHandler {
                     Authorization: `Bearer ${accessToken?.token}`
                 },
                 data: {
-                    message: view.state.comment_reply.reply,
-                    comment_id: view.commentData.commentId
+                    message: view.state.new_comment.comment
                 }
             };
-            console.log('post data - ', postData, view.block);
-
+            console.log('post data - ', postData, view.commentData);
             this.http
                 .post(
-                    `https://api.figma.com/v1/files/${view.commentData.fileKey}/comments`,
+                    `https://api.figma.com/v1/files/${view.commentData}/comments`,
                     postData
                 )
                 .then(async (res) => {
+
                     console.log('post comment data ', res); // remove this
                     // if res.data.status starts with 400 then show error message
                     if (res.data.status === 404) {
@@ -80,6 +79,8 @@ export class ExecuteReplyHandler {
                         `${e.data.message}`
                     );
                 });
+        } else {
+            console.log('room not found');
         }
         return {
             success: true

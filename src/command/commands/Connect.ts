@@ -1,13 +1,12 @@
-import { FigmaApp } from "../FigmaApp";
+import { FigmaApp } from '../../../FigmaApp';
 import {
     IRead,
     IModify,
-    IHttp,
-    IPersistence,
-} from "@rocket.chat/apps-engine/definition/accessors";
-import { IUser } from "@rocket.chat/apps-engine/definition/users";
-import { createSectionBlock, IButton } from "../src/lib/block";
-import { sendDMToUser } from "../src/lib/messages";
+    IPersistence
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { createSectionBlock, IButton } from '../../lib/block';
+import { sendDMToUser } from '../../lib/messages';
 
 export async function figmaConnectCommand(
     app: FigmaApp,
@@ -21,8 +20,8 @@ export async function figmaConnectCommand(
         .getUserAuthorizationUrl(user);
 
     const button: IButton = {
-        text: "Connect Your Account",
-        url: url.toString(),
+        text: 'Connect Your Account',
+        url: url.toString()
     };
 
     const message = `
@@ -35,5 +34,5 @@ export async function figmaConnectCommand(
             \xa0\xa0 • A file you are collaborating on is updated.`;
 
     const block = await createSectionBlock(modify, message, button);
-    await sendDMToUser(read, modify, user, "", persistence, block);
+    await sendDMToUser(read, modify, user, '', persistence, block);
 }

@@ -1,7 +1,7 @@
 {
     "env": {
-        "es2021": true,
-        "node": true
+        "browser": true,
+        "es2021": true
     },
     "extends": [
         "eslint:recommended",
@@ -18,29 +18,5 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "indent": [
-            "warn",
-            "tab"
-        ],
-        "linebreak-style": [
-            "warn",
-            "unix"
-        ],
-        "quotes": [
-            "warn",
-            "single"
-        ],
-        "semi": [
-            "warn",
-            "always"
-        ],
-        "no-mixed-spaces-and-tabs":"warn",
-        "object-curly-newline": ["error", {
-            "ObjectExpression": "always",
-            "ObjectPattern": { "multiline": false },
-            "ImportDeclaration": "never",
-            "ExportDeclaration": { "multiline": true, "minProperties": 3 }
-        }],
-        "@typescript-eslint/no-non-null-assertion": "warn"
     }
 }

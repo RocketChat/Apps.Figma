@@ -1,34 +1,27 @@
 import {
     ISlashCommand,
-    SlashCommandContext,
-} from "@rocket.chat/apps-engine/definition/slashcommands";
-import { FigmaApp } from "../FigmaApp";
+    SlashCommandContext
+} from '@rocket.chat/apps-engine/definition/slashcommands';
+import { FigmaApp } from '../../FigmaApp';
 import {
     IRead,
     IModify,
     IHttp,
-    IPersistence,
-} from "@rocket.chat/apps-engine/definition/accessors";
-import { IUser } from "@rocket.chat/apps-engine/definition/users";
-import { createSectionBlock, IButton } from "../src/lib/block";
-import {
-    sendDMToUser,
-    sendMessage,
-    sendNotificationToUsers,
-} from "../src/lib/messages";
-import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
-import { getAccessTokenForUser } from "../src/storage/users";
-import {
-    BlockElementType,
-    TextObjectType,
-} from "@rocket.chat/apps-engine/definition/uikit";
-import { figmaSubscribeCommand } from "./Subscribe";
-import { figmaConnectCommand } from "./Connect";
+    IPersistence
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { sendDMToUser, botNotifyCurrentUser } from '../lib/messages';
+import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
+import { figmaSubscribeCommand } from './commands/Subscribe';
+import { figmaConnectCommand } from './commands/Connect';
+import { figmaListCommand } from './commands/List';
+import { commands } from '../enums/enums';
+import { Subscription } from '../sdk/webhooks.sdk';
 
 export class FigmaCommand implements ISlashCommand {
-    public command = "figma";
-    public i18nParamsExample = "params_example";
-    public i18nDescription = "cmd_description";
+    public command = commands.FIGMA;
+    public i18nParamsExample = 'params_example';
+    public i18nDescription = 'cmd_description';
     public providesPreview = false;
 
     public constructor(private readonly app: FigmaApp) {}
@@ -41,8 +34,9 @@ export class FigmaCommand implements ISlashCommand {
         persistence: IPersistence
     ): Promise<void> {
         const [command] = context.getArguments();
+
         switch (command) {
-            case "connect":
+            case commands.CONNECT:
                 await figmaConnectCommand(
                     this.app,
                     read,
@@ -51,7 +45,7 @@ export class FigmaCommand implements ISlashCommand {
                     persistence
                 );
                 break;
-            case "help":
+            case commands.HELP:
                 await this.figmaHelpCommand(
                     read,
                     modify,
@@ -59,7 +53,7 @@ export class FigmaCommand implements ISlashCommand {
                     persistence
                 );
                 break;
-            case "subscribe":
+            case commands.SUBSCRIBE:
                 await figmaSubscribeCommand(
                     context,
                     read,
@@ -69,17 +63,48 @@ export class FigmaCommand implements ISlashCommand {
                     context.getRoom(),
                     context.getSender()
                 );
+
+                break;
+            case commands.LIST:
+                await figmaListCommand(
+                    context,
+                    read,
+                    modify,
+                    http,
+                    persistence,
+                    context.getRoom(),
+                    context.getSender()
+                );
+                break;
+            case 'delete':
+                await this.figmaDeleteCommand(read, context, persistence);
                 break;
             default:
                 await this.figmaConfuseCommand(
                     context.getRoom(),
                     read,
                     modify,
-                    context.getSender(),
-                    persistence
+                    context.getSender()
                 );
                 break;
         }
+    }
+
+    public async figmaDeleteCommand(
+        read: IRead,
+        context: SlashCommandContext,
+        persistence: IPersistence
+    ) {
+        const subscriptionStorage = new Subscription(
+            persistence,
+            read.getPersistenceReader()
+        );
+
+        const team_id = context.getArguments()[1];
+
+        subscriptionStorage.deleteAllTeamSubscriptions(team_id).then((res) => {
+            console.log('result: deleted subscriptions ', res);
+        });
     }
 
     public async figmaHelpCommand(
@@ -87,7 +112,7 @@ export class FigmaCommand implements ISlashCommand {
         modify: IModify,
         user: IUser,
         persistence: IPersistence
-    ) {
+    ): Promise<void> {
         const message = `Commands available inside a channel:
         \xa0\xa0• To connect your Figma account with the rocket chat server use command \`/figma connect\`.
         \xa0\xa0• To subscribe for updates to a any file/project from figma inside rocket chat use command \`/figma subscribe\`.
@@ -99,16 +124,16 @@ export class FigmaCommand implements ISlashCommand {
          `;
         await sendDMToUser(read, modify, user, message, persistence);
     }
+
     public async figmaConfuseCommand(
         room: IRoom,
         read: IRead,
         modify: IModify,
-        user: IUser,
-        persistence: IPersistence
+        user: IUser
     ) {
         const message = `Hmmm. I didn't really understand that last message.
          Try \`/figma help\` to see the commands available
          `;
-        await sendNotificationToUsers(read, modify, user, room, message);
+        await botNotifyCurrentUser(read, modify, user, room, message);
     }
 }
