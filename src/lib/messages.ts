@@ -98,6 +98,27 @@ export async function botMessageChannel(
     console.log('app user not found user reader - ', read.getUserReader());
     return '';
 }
+export async function appUserSendMessage(
+    read: IRead,
+    modify: IModify,
+    room: IRoom,
+    blocks?: BlockBuilder | [IBlock]
+): Promise<string> {
+    const appUser = (await read.getUserReader().getAppUser()) as IUser;
+    const msg = modify
+        .getCreator()
+        .startMessage()
+        .setSender(appUser)
+        .setRoom(room)
+        .setGroupable(false)
+        .setParseUrls(false);
+
+    if (blocks !== undefined) {
+        msg.setBlocks(blocks);
+    }
+
+    return await modify.getCreator().finish(msg);
+}
 
 export async function shouldSendMessage(
     read: IRead,

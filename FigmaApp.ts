@@ -250,7 +250,6 @@ export class FigmaApp extends App {
                 this.oauth2Options
             );
         }
-
         return this.oauth2ClientInstance;
     }
 
