@@ -1,6 +1,6 @@
 # Figma Notification now in Rocket.Chat
 
-![Horizontal Banner]('./assets/FigmaAppCover.png')
+![Horizontal Banner](https://github.com/irffanasiff/Apps.Figma/blob/versions_delete_notifications/assets/FigmaAppCover.png)
 
 Rocket.Chat and Figma integration offers figma notifications directly inside rocket.chat channels. Teams/individuals will receive personalized updates for different events from figma for a project, file or a team they have subscribed to. This will improve workflow and the functionality of design teams so that teams can deliver better products faster.
 
@@ -19,7 +19,7 @@ Rocket.Chat and Figma integration offers figma notifications directly inside roc
 
  1. Install the app from the [marketplace](https://www.rocket.chat/marketplace) or clone the repository and add the zip file manually to your rocket.chat server.</br>
  2. Go to [figma api](https://www.figma.com/developers/apps) and create a figma app. </br>
-![Figma app registration]('./assets/FigmaAppCover.png')
+![Figma app registration](https://github.com/irffanasiff/Apps.Figma/blob/versions_delete_notifications/assets/NewFigmaAppSS.png)
  3. Get the callback url from the app settings page in rocket.chat and add it to the figma app. </br>
  4. Copy the client id and client secret and paste it in the app settings ( don't forget to click on save button ) </br>
  5. You are all set to go now. use `/figma connect` command to connect your figma account with rocket.chat. </br>
