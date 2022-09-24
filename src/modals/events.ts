@@ -83,14 +83,14 @@ export async function eventModal({
                         emoji: true
                     }
                 },
-                {
-                    value: 'FILE_UPDATE',
-                    text: {
-                        type: TextObjectType.PLAINTEXT,
-                        text: 'File Updates',
-                        emoji: true
-                    }
-                },
+                // {
+                //     value: 'FILE_UPDATE',
+                //     text: {
+                //         type: TextObjectType.PLAINTEXT,
+                //         text: 'File Updates',
+                //         emoji: true
+                //     }
+                // },
                 {
                     value: 'FILE_VERSION_UPDATE',
                     text: {
@@ -106,15 +106,15 @@ export async function eventModal({
                         text: 'File Delete',
                         emoji: true
                     }
-                },
-                {
-                    value: 'LIBRARY_PUBLISH',
-                    text: {
-                        type: TextObjectType.PLAINTEXT,
-                        text: 'Library Publish',
-                        emoji: true
-                    }
                 }
+                // {
+                //     value: 'LIBRARY_PUBLISH',
+                //     text: {
+                //         type: TextObjectType.PLAINTEXT,
+                //         text: 'Library Publish',
+                //         emoji: true
+                //     }
+                // }
             ],
             placeholder: {
                 type: TextObjectType.PLAINTEXT,

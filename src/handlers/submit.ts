@@ -36,11 +36,11 @@ export class ExecuteViewSubmitHandler {
             };
         } else {
             state = view.state as IState;
-
+            console.log('state', state);
             const team_url = state?.team_url?.url;
             const resource_type = state?.resource_block?.type;
             const { user } = context.getInteractionData();
-
+     
             if (room) {
                 if (!resource_type) {
                     botNotifyCurrentUser(

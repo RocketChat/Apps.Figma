@@ -73,7 +73,6 @@ export async function getProjects(
                 }
             }
             if (room_projects_ids.length === 0) {
-                console.log('send error message');
                 return await botNotifyCurrentUser(
                     read,
                     modify,
@@ -161,7 +160,6 @@ export async function getProjects(
             }
         })
         .catch(async (error) => {
-            console.log('error: getting all subscriptions - ', error);
             return await botNotifyCurrentUser(
                 read,
                 modify,

@@ -74,7 +74,6 @@ export class BlockActionHandler {
                             );
                             break;
                         case blockAction.REPLY:
-                            console.log('inside reply to comment');
                             await commentReply(
                                 modify,
                                 context,
@@ -87,10 +86,8 @@ export class BlockActionHandler {
                             );
                             break;
                         case blockAction.REACT:
-                            console.log('result: reaction');
                             break;
                         case blockAction.POST:
-                            console.log('inside post reply');
                             break;
                         case blockAction.COMMENT:
                             await newComment(

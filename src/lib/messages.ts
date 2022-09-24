@@ -1,5 +1,3 @@
-/* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable prefer-const */
 import {
     IModify,
@@ -93,33 +91,44 @@ export async function botMessageChannel(
         if (blocks !== undefined) {
             msg.setBlocks(blocks);
         }
-        return modify.getCreator().finish(msg);
+        modify.getCreator().finish(msg);
+        return 'message sent successfully';
     }
-    console.log('app user not found user reader - ', read.getUserReader());
+    console.log(
+        'error: app user not found user reader - ',
+        read.getUserReader()
+    );
     return '';
 }
-export async function appUserSendMessage(
+export async function botNormalMessageChannel(
     read: IRead,
     modify: IModify,
     room: IRoom,
+    message: string,
     blocks?: BlockBuilder | [IBlock]
 ): Promise<string> {
-    const appUser = (await read.getUserReader().getAppUser()) as IUser;
-    const msg = modify
-        .getCreator()
-        .startMessage()
-        .setSender(appUser)
-        .setRoom(room)
-        .setGroupable(false)
-        .setParseUrls(false);
-
-    if (blocks !== undefined) {
-        msg.setBlocks(blocks);
+    const appUser = await read.getUserReader().getAppUser();
+    if (appUser) {
+        const msg = modify
+            .getCreator()
+            .startMessage()
+            .setSender(appUser)
+            .setRoom(room)
+            .setGroupable(false)
+            .setParseUrls(false)
+            .setText(message);
+        console.log('msg', msg);
+        if (blocks !== undefined) {
+            msg.setBlocks(blocks);
+        }
+        return modify.getCreator().finish(msg);
     }
-
-    return await modify.getCreator().finish(msg);
+    console.log(
+        'error: app user not found user reader - ',
+        read.getUserReader()
+    );
+    return '';
 }
-
 export async function shouldSendMessage(
     read: IRead,
     persistence: IPersistence,
@@ -140,7 +149,6 @@ export async function shouldSendMessage(
  * Figma.bot sends notification inside the current room to the current user
  */
 export async function botNotifyCurrentUser(
-
     read: IRead,
     modify: IModify,
     user: IUser,
@@ -173,7 +181,7 @@ export async function sendDMToUser(
     user: IUser,
     message: string,
     persistence: IPersistence,
-    blocks?: BlockBuilder | [IBlock]
+    blocks?: BlockBuilder
 ): Promise<string> {
     const appUser: IUser | undefined = await read.getUserReader().getAppUser();
     if (appUser) {

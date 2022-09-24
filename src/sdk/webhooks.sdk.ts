@@ -288,7 +288,6 @@ export class Subscription {
     public async deleteAllTeamSubscriptions(
         team_id: string
     ): Promise<object[]> {
-        console.log('team id - ', team_id);
         try {
             const associations: RocketChatAssociationRecord[] = [
                 new RocketChatAssociationRecord(

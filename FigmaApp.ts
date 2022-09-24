@@ -63,10 +63,6 @@ export class FigmaApp extends App {
         persistence: IPersistence,
         modify: IModify
     ) {
-        console.log(
-            'modal title - ',
-            context.getInteractionData().view.title.text
-        );
         const user: IUser = context.getInteractionData().user;
         const room = await getRoom(read, user);
         if (room) {
@@ -85,7 +81,7 @@ export class FigmaApp extends App {
                 return await handler
                     .run(context, room)
                     .catch((err) =>
-                        console.log('error: submitting 2nd modal', err)
+                        console.log('error: submitting Events modal', err)
                     );
             } else if (
                 context.getInteractionData().view.title.text ===
@@ -107,7 +103,6 @@ export class FigmaApp extends App {
                 context.getInteractionData().view.title.text ===
                 modalTitle.REPLY_MODAL
             ) {
-                console.log('inside reply modal');
                 const handler = new ExecuteReplyHandler(
                     this,
                     read,
@@ -120,7 +115,6 @@ export class FigmaApp extends App {
                 context.getInteractionData().view.title.text ===
                 modalTitle.CREATE_COMMENT_MODAL
             ) {
-                console.log('inside create comment modal');
                 const handler = new CommentModalHandler(
                     this,
                     read,
@@ -228,18 +222,26 @@ export class FigmaApp extends App {
         modify: IModify
     ): Promise<void> {
         const user = context.user;
-        const welcomeMessage = `You’ve successfully installed Figma Rocket.Chat app! Now your Figma comments and notifications will show up here. :tada:
+        const welcomeMessage = `You’ve successfully installed Figma Rocket.Chat app! Now the admin of the server has to create an app on figma.com and add the figma client id and client secret to the app settings in order to connect the server with figma.
+        1. Go to  https://www.figma.com/developers/apps and create a new app.
+        2. Get the callback url from the app settings page ( -> admin panel -> apps) in rocket.chat and add it to the figma app.
+        3. Copy the client id and client secret and paste it in the app settings ( don't forget to click on save button )
+        :tada: You are all set!
+
+        Now your Figma comments and notifications will show up in the rocket chat server.
         With Figma App, you can reply to file comments directly in a rocket chat channel. You will get notified when:
         \xa0\xa0 • A new comment is added to a file you are collaborating on.
         \xa0\xa0 • Someone replies to a comment you made.
         \xa0\xa0 • You are tagged in a file.
         \xa0\xa0 • You are invited to a file.
         \xa0\xa0 • A file you are collaborating on is updated.
+        \xa0\xa0 • Notifications on Branches ( for organizations only ).
 
         Some tips:
         \xa0\xa0 • When you reply to a Figma comment here, your reply will automatically be added to the Figma file.
         \xa0\xa0 • Type \` /figma connect \` to connect your figma account to the rocket.chat server.
-        \xa0\xa0 • Type \` /figma help  \` for command. `;
+        \xa0\xa0 • Type \` /figma help  \` for all the commands command.
+        \xa0\xa0 • Subscribe a file, team, or project in a channel using \` /figma subscribe  \` and notify all the users that they will have to authenticate their figma accounts using  \` /figma connect \`. `;
         await sendDMToUser(read, modify, user, welcomeMessage, persistence);
     }
 

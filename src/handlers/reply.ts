@@ -35,8 +35,6 @@ export class ExecuteReplyHandler {
                     comment_id: view.commentData.commentId
                 }
             };
-            console.log('post data - ', postData, view.block);
-
             this.http
                 .post(
                     `https://api.figma.com/v1/files/${view.commentData.fileKey}/comments`,

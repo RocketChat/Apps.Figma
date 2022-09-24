@@ -1,26 +1,25 @@
-## Getting Started
-Now that you have generated a blank default Rocket.Chat App, what are you supposed to do next?
-Start developing! Open up your favorite editor, our recommended one is Visual Studio code,
-and start working on your App. Once you have something ready to test, you can either
-package it up and manually deploy it to your test instance or you can use the CLI to do so.
-Here are some commands to get started:
-- `rc-apps package`: this command will generate a packaged app file (zip) which can be installed **if** it compiles with TypeScript
-- `rc-apps deploy`: this will do what `package` does but will then ask you for your server url, username, and password to deploy it for you
+# Figma Notification now in Rocket.Chat
 
-## Documentation
-Here are some links to examples and documentation:
-- [Rocket.Chat Apps TypeScript Definitions Documentation](https://rocketchat.github.io/Rocket.Chat.Apps-engine/)
-- [Rocket.Chat Apps TypeScript Definitions Repository](https://github.com/RocketChat/Rocket.Chat.Apps-engine)
-- [Example Rocket.Chat Apps](https://github.com/graywolf336/RocketChatApps)
-- Community Forums
-  - [App Requests](https://forums.rocket.chat/c/rocket-chat-apps/requests)
-  - [App Guides](https://forums.rocket.chat/c/rocket-chat-apps/guides)
-  - [Top View of Both Categories](https://forums.rocket.chat/c/rocket-chat-apps)
-- [#rocketchat-apps on Open.Rocket.Chat](https://open.rocket.chat/channel/rocketchat-apps)
+![Horizontal Banner](https://github.com/irffanasiff/Apps.Figma/blob/versions_delete_notifications/assets/FigmaAppCover.png)
 
-## Figma App
+Rocket.Chat and Figma integration offers figma notifications directly inside rocket.chat channels. Teams/individuals will receive personalized updates for different events from figma for a project, file or a team they have subscribed to. This will improve workflow and the functionality of design teams so that teams can deliver better products faster.
 
-- User can subscribe to only those files which are available under a team
-- Users will be notified for files that are available to everyone on the team, or are in view-only projects.
-- Users will not be notified for files in invite-only projects.
+<h2>App Features</h2>
+<ul>
+  <li>Customize your Rocket.Chat channel to recieve notifications on specific files, projects, and teams</li>
+  <li>Get notification in DM when you are tagged in figma</li>
+  <li>Reply to comments and create new comments directly from Rocket.Chat</li>
+  <li>Get notified when a file is updated or deleted</li>
+  <li>Get notified when a new version of file is created or a new component is published inside a library</li>
+  <li>Notifications on branch updates coming soon </li>
+</ul>
 
+
+<h2>Setting up Figma App</h2>
+
+ 1. Install the app from the [marketplace](https://www.rocket.chat/marketplace) or clone the repository and add the zip file manually to your rocket.chat server.</br>
+ 2. Go to [figma api](https://www.figma.com/developers/apps) and create a figma app. </br>
+![Figma app registration](https://github.com/irffanasiff/Apps.Figma/blob/versions_delete_notifications/assets/NewFigmaAppSS.png)
+ 3. Get the callback url from the app settings page in rocket.chat and add it to the figma app. </br>
+ 4. Copy the client id and client secret and paste it in the app settings ( don't forget to click on save button ) </br>
+ 5. You are all set to go now. use `/figma connect` command to connect your figma account with rocket.chat. </br>

@@ -34,16 +34,12 @@ export class CommentModalHandler {
                     message: view.state.new_comment.comment
                 }
             };
-            console.log('post data - ', postData, view.commentData);
             this.http
                 .post(
                     `https://api.figma.com/v1/files/${view.commentData}/comments`,
                     postData
                 )
                 .then(async (res) => {
-
-                    console.log('post comment data ', res); // remove this
-                    // if res.data.status starts with 400 then show error message
                     if (res.data.status === 404) {
                         return await botNotifyCurrentUser(
                             this.read,
@@ -80,7 +76,7 @@ export class CommentModalHandler {
                     );
                 });
         } else {
-            console.log('room not found');
+            console.log('error: room not found');
         }
         return {
             success: true
