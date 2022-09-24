@@ -8,7 +8,7 @@
         "homepage": "https://irfanasif.me",
         "support": "https://github.com/demonicirfan"
     },
-    "name": "Figma",
+    "name": "Figma Notifications (Beta)",
     "nameSlug": "figma",
     "classFile": "FigmaApp.ts",
     "description": "Integrates Figma into Rocket.Chat. Users and Teams are directly notified in the chat about comments and updates in the Figma project.",
