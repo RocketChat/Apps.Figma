@@ -50,14 +50,15 @@ export class BlockActionHandler {
             Authorization: `Bearer ${token?.token}`
         };
 
-        const teamId: string = getTeamID(team_url);
+        const teamId: string | undefined = getTeamID(team_url);
 
-        if (teamId.length < 0) {
-            sendMessage(
+        if (!teamId || teamId.length < 0) {
+            botNotifyCurrentUser(
+                this.read,
                 this.modify,
-                this.room,
                 this.user,
-                'Team Id Not Available'
+                this.room,
+                'Cannot get the team ID from url. Please check if the URL is a Team URL.'
             );
             return {
                 success: false
@@ -79,7 +80,7 @@ export class BlockActionHandler {
                                 this.modify,
                                 this.user,
                                 this.room,
-                                'Error connecting with figma server. Please try again after some time. Check logs if it still does not work report the issue'
+                                'Error connecting with figma server. Please try again after some time. Check logs if it still does not work report the issue.'
                             );
                             //return { success: false };
                         }

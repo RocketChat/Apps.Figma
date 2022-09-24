@@ -139,7 +139,7 @@ export async function updateEvent(
     read: IRead,
     http: IHttp
 ) {
-    console.log('payload for file saved - ', payload);
+    // console.log('payload for file saved - ', payload);
 }
 export async function publishEvent(
     payload: ICommentPayload,
@@ -167,56 +167,56 @@ export async function versionUpdateEvent(
             (user) => user.figmaUserId === payload.triggered_by.id
         );
     });
-
     for (const subscription of subscriptions) {
         for (const roomData of subscription.room_data) {
             const room = await read.getRoomReader().getById(roomData.room_Id!);
             if (!room) {
-                console.log('error: no room found ');
                 return;
             }
             // check if the current room contains the file inside file_ids array
+            let message: string | undefined = undefined;
             if (roomData.file_Ids?.includes(payload.file_key)) {
-                const block = modify.getCreator().getBlockBuilder();
                 if (payload.description.length > 0) {
-                    block.addSectionBlock({
-                        text: {
-                            type: TextObjectType.MARKDOWN,
-                            text: `> ${payload.description}`
-                        }
-                    });
-
-                    block.addActionsBlock({
-                        elements: [
-                            block.newButtonElement({
-                                actionId: blockAction.OPEN_FILE,
-                                text: block.newPlainTextObject('Open file'),
-                                url: `https://www.figma.com/file/${payload.file_key}/${payload.file_name}?version-id=${payload.version_id}`
-                            })
-                        ]
-                    });
+                    message = `Description: ${payload.description}`;
                 }
                 if (versionAddedBy) {
                     // send message with deleteBy to all the users in the room
-                    await botNormalMessageChannel(
+                    const sendMessage = await botNormalMessageChannel(
                         read,
                         modify,
                         room,
-                        `@${versionAddedBy.username} added a new version: ${payload.label} of the file ${payload.file_name}`,
-                        block
+                        `@${versionAddedBy?.username} added a new version: *${
+                            payload?.label
+                        }* of the file: [${
+                            payload?.file_name
+                        }](https://www.figma.com/file/${payload?.file_key}/${
+                            payload?.file_name
+                        }?version-id=${payload?.version_id}) \n ${
+                            message && message
+                        }`
                     );
+                    console.log('was message sent ', sendMessage);
                 } else {
                     await botNormalMessageChannel(
                         read,
                         modify,
                         room,
-                        `${payload.triggered_by.handle} added a new version: ${payload.label} of the file ${payload.file_name} `,
-                        block
+                        `${
+                            payload?.triggered_by?.handle
+                        } added a new version: *${
+                            payload?.label
+                        }* of the file: [${
+                            payload?.file_name
+                        }](https://www.figma.com/file/${payload?.file_key}/${
+                            payload?.file_name
+                        }?version-id=${payload?.version_id}) \n ${
+                            message && message
+                        }`
                     );
                 }
             } else {
                 console.log(
-                    'RESULT: the file which was deleted is not subscribed by the user'
+                    'RESULT: this file is not subscribed by the user so no need to send message'
                 );
             }
         }

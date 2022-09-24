@@ -93,7 +93,8 @@ export async function botMessageChannel(
         if (blocks !== undefined) {
             msg.setBlocks(blocks);
         }
-        return modify.getCreator().finish(msg);
+        modify.getCreator().finish(msg);
+        return 'message sent successfully';
     }
     console.log('error: app user not found user reader - ', read.getUserReader());
     return '';
@@ -114,7 +115,8 @@ export async function botNormalMessageChannel(
             .setRoom(room)
             .setGroupable(false)
             .setParseUrls(false)
-            .setText(message);
+            .setText(message)
+        console.log('msg', msg);
         if (blocks !== undefined) {
             msg.setBlocks(blocks);
         }

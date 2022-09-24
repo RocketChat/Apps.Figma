@@ -24,14 +24,17 @@ export function getFileID(fileURL: string): string {
     return fileID;
 }
 
-export function getTeamID(teamURL: string): string {
+export function getTeamID(teamURL: string): string | undefined {
     if (!teamURL.startsWith(BaseTeamHost)) {
-        return '';
+        return undefined;
     }
-
     const id = teamURL.substring(BaseTeamHost.length).split('/')[0];
     const teamID = id;
-    return teamID;
+    if (teamID.length < 16) {
+        return undefined;
+    } else {
+        return teamID;
+    }
 }
 
 // Project url - https://www.figma.com/files/project/53807385/project1?fuid=983416835186317142
