@@ -1,5 +1,3 @@
-/* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable prefer-const */
 import {
     IModify,
@@ -96,7 +94,10 @@ export async function botMessageChannel(
         modify.getCreator().finish(msg);
         return 'message sent successfully';
     }
-    console.log('error: app user not found user reader - ', read.getUserReader());
+    console.log(
+        'error: app user not found user reader - ',
+        read.getUserReader()
+    );
     return '';
 }
 export async function botNormalMessageChannel(
@@ -115,14 +116,17 @@ export async function botNormalMessageChannel(
             .setRoom(room)
             .setGroupable(false)
             .setParseUrls(false)
-            .setText(message)
+            .setText(message);
         console.log('msg', msg);
         if (blocks !== undefined) {
             msg.setBlocks(blocks);
         }
         return modify.getCreator().finish(msg);
     }
-    console.log('error: app user not found user reader - ', read.getUserReader());
+    console.log(
+        'error: app user not found user reader - ',
+        read.getUserReader()
+    );
     return '';
 }
 export async function shouldSendMessage(
@@ -145,7 +149,6 @@ export async function shouldSendMessage(
  * Figma.bot sends notification inside the current room to the current user
  */
 export async function botNotifyCurrentUser(
-
     read: IRead,
     modify: IModify,
     user: IUser,
@@ -178,7 +181,7 @@ export async function sendDMToUser(
     user: IUser,
     message: string,
     persistence: IPersistence,
-    blocks?: BlockBuilder | [IBlock]
+    blocks?: BlockBuilder
 ): Promise<string> {
     const appUser: IUser | undefined = await read.getUserReader().getAppUser();
     if (appUser) {

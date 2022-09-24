@@ -23,6 +23,3 @@ Rocket.Chat and Figma integration offers figma notifications directly inside roc
  3. Get the callback url from the app settings page in rocket.chat and add it to the figma app. </br>
  4. Copy the client id and client secret and paste it in the app settings ( don't forget to click on save button ) </br>
  5. You are all set to go now. use `/figma connect` command to connect your figma account with rocket.chat. </br>
-
-
-
