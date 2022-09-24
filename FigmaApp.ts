@@ -45,7 +45,6 @@ export class FigmaApp extends App {
 
     public user: IUser;
     public botName: string;
-
     public oauth2ClientInstance: IOAuth2Client;
     public oauth2Options: IOAuth2ClientOptions = {
         alias: 'figma',

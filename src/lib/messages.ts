@@ -145,6 +145,7 @@ export async function shouldSendMessage(
  * Figma.bot sends notification inside the current room to the current user
  */
 export async function botNotifyCurrentUser(
+
     read: IRead,
     modify: IModify,
     user: IUser,
