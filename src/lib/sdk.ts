@@ -1,5 +1,7 @@
 import { IHttp } from "@rocket.chat/apps-engine/definition/accessors";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { getWebhookUrl } from "../sdk/subscription.sdk";
+import { webHooksUrl } from "./const";
 const crypto = require("crypto");
 
 const BaseFileHost = "https://www.figma.com/file/";
@@ -14,7 +16,8 @@ export class FigmaSDK {
     constructor(private readonly http: IHttp, private readonly accessToken) {}
 
     public createWebhook(fileID: string, webhookUrl: string) {
-        return this.post("https://api.figma.com/v2/webhooks", {
+        const webhookurl=webHooksUrl()
+        return this.post(webhookurl, {
             active: true,
             event_type: "FILE_COMMENT",
             team_id: "1051788064684166795",

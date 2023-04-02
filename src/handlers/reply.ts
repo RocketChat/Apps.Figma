@@ -9,6 +9,7 @@ import {
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
 import { FigmaApp } from '../../FigmaApp';
+import { getFileCommentsUrl } from '../lib/const';
 import { botNotifyCurrentUser } from '../lib/messages';
 import { getAccessTokenForUser } from '../storage/users';
 
@@ -36,10 +37,10 @@ export class ExecuteReplyHandler {
                 }
             };
             console.log('post data - ', postData, view.block);
-
+            const url = getFileCommentsUrl(view.commentData.fileKey);
             this.http
                 .post(
-                    `https://api.figma.com/v1/files/${view.commentData.fileKey}/comments`,
+                    url,
                     postData
                 )
                 .then(async (res) => {

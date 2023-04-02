@@ -37,6 +37,7 @@ import { BlockActionHandler } from './src/handlers/BlockActionHandler';
 import { ExecuteReplyHandler } from './src/handlers/reply';
 import { modalTitle } from './src/enums/enums';
 import { CommentModalHandler } from './src/handlers/comment';
+import { meUrl } from './src/lib/const';
 
 export class FigmaApp extends App {
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -190,7 +191,8 @@ export class FigmaApp extends App {
         persistence: IPersistence
     ) {
         if (authData) {
-            const userData = await http.get('https://api.figma.com/v1/me', {
+            const url = meUrl()
+            const userData = await http.get(url, {
                 headers: {
                     Authorization: `Bearer ${authData.token}`
                 }

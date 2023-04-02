@@ -13,6 +13,7 @@ import {
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { file } from '../../definition';
 import { getRequest } from '../../helpers/Figma.sdk';
+import { getProjectFilesUrl } from '../../lib/const';
 import { botMessageChannel } from '../../lib/messages';
 import { Subscription } from '../../sdk/webhooks.sdk';
 import { getAccessTokenForUser } from '../../storage/users';
@@ -45,11 +46,12 @@ export async function newProjectSubscription(
         await Promise.all(
             project_Ids.map(async (project_id) => {
                 // this will run for all project ids for all these store them in one file
+                const projecturl=getProjectFilesUrl(project_id);
                 await getRequest(
                     read,
                     context,
                     http,
-                    `https://api.figma.com/v1/projects/${project_id}/files`
+                    projecturl
                 )
                     .then(async (response) => {
                         // 3 - got the files from figma
