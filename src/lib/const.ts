@@ -1,4 +1,4 @@
-const ApiBaseUrl: string = 'https://api.figma.com/v1';
+const ApiBaseUrl: string = 'https://api.figma.com';
 
 const ApiVersion = {
     V1: 'v1',
