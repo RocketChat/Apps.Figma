@@ -16,6 +16,7 @@ import {
 } from '@rocket.chat/apps-engine/definition/uikit';
 import { events } from '../../enums/enums';
 import { getRequest } from '../../helpers/Figma.sdk';
+import { getProjectFilesUrl, getTeamProjectsUrl } from '../../lib/const';
 export async function newTeamSubscription(
     context: UIKitViewSubmitInteractionContext,
     persistence: IPersistence,
@@ -38,11 +39,12 @@ export async function newTeamSubscription(
     );
 
     try {
+        const teamUrl=getTeamProjectsUrl(team_id)
         await getRequest(
             read,
             context,
             http,
-            `https://api.figma.com/v1/teams/${team_id}/projects`
+            teamUrl
         )
             .then(async (team_response) => {
                 // 3 - got the project from figma');
@@ -53,7 +55,7 @@ export async function newTeamSubscription(
                     files_to_be_stored = [];
                     const reqUrls = team_response.data.projects.map(
                         (project: any) =>
-                            `https://api.figma.com/v1/projects/${project.id}/files`
+                            getProjectFilesUrl(project.id)
                     );
                     try {
                         await Promise.all(
@@ -63,7 +65,7 @@ export async function newTeamSubscription(
                             )
                         )
                             .then((project_response) => {
-                               // 4 - got all the files from the project this will repeat multiple times' 
+                               // 4 - got all the files from the project this will repeat multiple times'
                                 project_response.forEach((response) =>
                                     response.data.files.forEach((file: file) =>
                                         files_to_be_stored.push(file.key)

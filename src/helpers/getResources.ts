@@ -4,6 +4,7 @@ import {
     IRead
 } from '@rocket.chat/apps-engine/definition/accessors';
 import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
+import { getProjectFilesUrl, getTeamProjectsUrl } from '../lib/const';
 import { getRequest } from './Figma.sdk';
 
 export class GetResourcesFromFigma {
@@ -13,15 +14,16 @@ export class GetResourcesFromFigma {
         context: UIKitViewSubmitInteractionContext,
         teamId: string
     ) {
+        const url = getTeamProjectsUrl(teamId);
         await getRequest(
             this.read,
             context,
             this.http,
-            `https://api.figma.com/v1/teams/${teamId}/projects`
+            url
         ).then(async (team_response) => {
             const reqUrls = team_response.data.projects.map(
                 (project: any) =>
-                    `https://api.figma.com/v1/projects/${project.id}/files`
+                    getProjectFilesUrl(project.id)
             );
             return await Promise.all(
                 reqUrls.map(
@@ -35,11 +37,12 @@ export class GetResourcesFromFigma {
         context: UIKitViewSubmitInteractionContext,
         teamId: string
     ) {
+        const url2=getTeamProjectsUrl(teamId);
         await getRequest(
             this.read,
             context,
             this.http,
-            `https://api.figma.com/v1/teams/${teamId}/projects`
+            url2
         ).then((res) => {
             console.log('response from figma for projects - ', res.data);
         });

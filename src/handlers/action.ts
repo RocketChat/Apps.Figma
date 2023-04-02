@@ -19,6 +19,7 @@ import { botNotifyCurrentUser, sendMessage } from '../lib/messages';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 import { getRequest } from '../helpers/Figma.sdk';
+import { getProjectFilesUrl, getTeamProjectsUrl } from '../lib/const';
 
 type file = {
     key: string;
@@ -63,14 +64,14 @@ export class BlockActionHandler {
                 success: false
             };
         }
-
+        const teamUrl=getTeamProjectsUrl(teamId);
         switch (resource_type) {
             case 'file':
                 await getRequest(
                     this.read,
                     context,
                     this.http,
-                    `https://api.figma.com/v1/teams/${teamId}/projects`
+                    teamUrl
                 )
                     .then(async (res: IHttpResponse) => {
                         if (!res) {
@@ -92,7 +93,7 @@ export class BlockActionHandler {
                         if (projectIds) {
                             const reqUrls = projectIds.map(
                                 (projectId) =>
-                                    `https://api.figma.com/v1/projects/${projectId}/files`
+                                    getProjectFilesUrl(projectId)
                             );
 
                             try {
@@ -200,7 +201,7 @@ export class BlockActionHandler {
                     this.read,
                     context,
                     this.http,
-                    `https://api.figma.com/v1/teams/${teamId}/projects`
+                    teamUrl
                 )
                     .then(async (res) => {
                         if (!res) {

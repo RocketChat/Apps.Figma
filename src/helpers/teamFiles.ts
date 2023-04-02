@@ -5,6 +5,7 @@ import {
     IRead
 } from '@rocket.chat/apps-engine/definition/accessors';
 import { UIKitViewSubmitInteractionContext } from '@rocket.chat/apps-engine/definition/uikit';
+import { getProjectFilesUrl, getTeamProjectsUrl } from '../lib/const';
 import { getRequest } from './Figma.sdk';
 
 // create a function to get all the files inside a project from figma using this code
@@ -15,15 +16,16 @@ export async function getAllTeamFiles(
     http: IHttp,
     teamId: string
 ) {
+    const teamUrl=getTeamProjectsUrl(teamId);
     await getRequest(
         this.read,
         context,
         this.http,
-        `https://api.figma.com/v1/teams/${teamId}/projects`
+        teamUrl
     ).then(async (team_response) => {
         const reqUrls = team_response.data.projects.map(
             (project: any) =>
-                `https://api.figma.com/v1/projects/${project.id}/files`
+                getProjectFilesUrl(project.id)
         );
         try {
             await Promise.all(

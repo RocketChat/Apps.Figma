@@ -29,6 +29,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { IModalContext } from "../definition";
+import { getFilesUrl, getProjectFilesUrl, getTeamProjectsUrl } from "./const";
 
 export async function createSubscription(
     context: UIKitViewSubmitInteractionContext,
@@ -71,9 +72,9 @@ export async function createSubscription(
             }
             return;
         }
-
+        const fileUrl=getFilesUrl(fileId);
         const response = await http.get(
-            `https://api.figma.com/v1/files/${fileId}`,
+            fileUrl,
             { headers }
         );
 
@@ -119,8 +120,9 @@ export async function createSubscription(
             }
             return;
         }
+        const teamUrl=getTeamProjectsUrl(teamId);
         const response = await http.get(
-            `https://api.figma.com/v1/teams/${teamId}/projects`,
+            teamUrl,
             { headers }
         );
 
@@ -161,9 +163,9 @@ export async function createSubscription(
             }
             return;
         }
-
+        const projecturl=getProjectFilesUrl(projectID);
         const response = await http.get(
-            `https://api.figma.com/v1/projects/${projectID}/files`,
+            projecturl,
             { headers }
         );
 

@@ -21,6 +21,7 @@ import { events } from '../enums/enums';
 import { WebhookSubscription } from '../handlers/subscription/createSubscriptionHandler';
 import { updateSubscriptionHandler } from '../handlers/subscription/updateSubscriptionHandler';
 import { getRequest, postRequest } from '../helpers/Figma.sdk';
+import { getProjectFilesUrl, getTeamProjectsUrl, webHooksUrl } from '../lib/const';
 
 export class AddSubscription {
     constructor(
@@ -109,11 +110,12 @@ export class AddSubscription {
                                 const files_in_team: string[] = [];
                                 const projects_in_team: string[] = [];
                                 if (!project_Ids?.length && !file_Ids?.length) {
+                                    const teamUrl=getTeamProjectsUrl(team_id);
                                     await getRequest(
                                         this.read,
                                         context,
                                         this.http,
-                                        `https://api.figma.com/v1/teams/${team_id}/projects`
+                                        teamUrl
                                     )
                                         .then(async (team_response) => {
                                             //console.log('response from figma for projects - ', team_response);
@@ -124,7 +126,7 @@ export class AddSubscription {
                                                         projects_in_team.push(
                                                             project.id
                                                         );
-                                                        return `https://api.figma.com/v1/projects/${project.id}/files`;
+                                                        return getProjectFilesUrl(project.id);
                                                     }
                                                 );
                                             if (projects_in_team) {
@@ -308,11 +310,12 @@ export class AddSubscription {
                                             description: room.id
                                         };
                                         // we send request to figma webhook to create a hook for every event ( runs 5 times )
+                                        const webhookurl=webHooksUrl();
                                         await postRequest(
                                             this.read,
                                             context,
                                             this.http,
-                                            'https://api.figma.com/v2/webhooks',
+                                            webhookurl,
                                             data
                                         )
                                             .then(async (response) => {

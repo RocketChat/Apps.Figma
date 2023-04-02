@@ -16,6 +16,7 @@ import {
 } from './messages';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { blockAction } from '../enums/enums';
+import { getProjectFilesUrl } from './const';
 
 export async function getProjects(
     modify: IModify,
@@ -86,7 +87,7 @@ export async function getProjects(
                 room_projects_ids
             ).map(
                 (projectId) =>
-                    `https://api.figma.com/v1/projects/${projectId}/files`
+                    getProjectFilesUrl(projectId)
             );
             try {
                 await Promise.all(

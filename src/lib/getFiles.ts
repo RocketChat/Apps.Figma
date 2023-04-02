@@ -13,6 +13,7 @@ import { storedRoomData } from '../definition';
 import { botMessageChannel, botNotifyCurrentUser } from './messages';
 import { TextObjectType } from '@rocket.chat/apps-engine/definition/uikit';
 import { blockAction } from '../enums/enums';
+import { getFilesUrl } from './const';
 
 export async function getFiles(
     modify: IModify,
@@ -78,7 +79,7 @@ export async function getFiles(
                 );
             }
             const filesDataReqUrls = removeDuplicates(room_files_ids).map(
-                (file_id) => `https://api.figma.com/v1/files/${file_id}`
+                (file_id) => getFilesUrl(file_id)
             );
             try {
                 await Promise.all(
